@@ -5,6 +5,14 @@ import numpy as np
 
 app = FastAPI()
 
+@app.get("/")
+def inicio():
+    return {
+        "mensaje": "Servidor de Inteligencia Artificial de Gimnasio Vórtice S.A.C. activo y operando",
+        "estado": "Online",
+        "api_docs": "/docs"
+    }
+
 # Cargar el modelo y el escalador cuando arranca el servidor
 modelo = joblib.load('modelo_random_forest_vortice.joblib')
 scaler = joblib.load('escalador_vortice.joblib')
