@@ -10,38 +10,48 @@ app = FastAPI(title="Gimnasio Vórtice S.A.C. - API de IA")
 modelo = joblib.load('modelo_random_forest_vortice.joblib')
 scaler = joblib.load('escalador_vortice.joblib')
 
-# Estructura de datos para la API
+# Estructura de datos exacta que el validador de FastAPI necesita comprobar
 class DatosCliente(BaseModel):
-    asistencia_semanal: float
+    edad: float
     antiguedad_meses: float
+    precio_membresia: float
+    asistencia_semanal: float
     consumo_barra: float
     uso_app: int
     genero_masculino: int
+    membresia_mensual: int
     membresia_trimestral: int
-    membresia_anual: int
 
 @app.post("/predecir_fuga")
 def predecir(cliente: DatosCliente):
+    # Crear el vector con exactamente las 9 características en el orden de entrenamiento:
+    # ['Edad', 'Antiguedad_Meses', 'Precio_Membresia_Soles', 'Asistencia_Semanal_Promedio', 
+    #  'Consumo_Barra_Soles', 'Uso_App_Web', 'Genero_Masculino', 'Tipo_Membresia_Mensual', 'Tipo_Membresia_Trimestral']
     datos = np.array([[
-        cliente.asistencia_semanal,
+        cliente.edad,
         cliente.antiguedad_meses,
+        cliente.precio_membresia,
+        cliente.asistencia_semanal,
         cliente.consumo_barra,
         cliente.uso_app,
         cliente.genero_masculino,
-        cliente.membresia_trimestral,
-        cliente.membresia_anual
+        cliente.membresia_mensual,
+        cliente.membresia_trimestral
     ]])
     
+    # Escalar las características numéricas
     datos_escalados = scaler.transform(datos)
+    
+    # Calcular la predicción
     probabilidad = modelo.predict_proba(datos_escalados)[0][1]
-    alerta = bool(probabilidad > 0.50) # Umbral óptimo de decisión
+    alerta = bool(probabilidad > 0.50) # Umbral del 50% para definir fuga
     
     return {
         "probabilidad_desercion": round(float(probabilidad), 4),
         "alerta_de_fuga": alerta
     }
 
-# Ruta de inicio que sirve la interfaz web interactiva
+# Ruta que sirve la preciosa interfaz gráfica actualizada
 @app.get("/", response_class=HTMLResponse)
 def home():
     html_content = """
@@ -81,9 +91,15 @@ def home():
                     </h2>
                     
                     <form id="form-predict" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Asistencias Semanales</label>
-                            <input type="number" step="0.1" min="0" max="7" id="asistencia" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 3.5" required>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Edad del Socio</label>
+                                <input type="number" min="14" max="90" id="edad" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 26" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Asistencias Semanales</label>
+                                <input type="number" step="0.1" min="0" max="7" id="asistencia" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 3.5" required>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -106,10 +122,10 @@ def home():
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">Usa App del Gimnasio</label>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Usa Plataforma Web</label>
                                 <select id="uso_app" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <option value="1">Sí, usa la web</option>
-                                    <option value="0">No usa la web</option>
+                                    <option value="1">Sí usa la Web</option>
+                                    <option value="0">No usa la Web</option>
                                 </select>
                             </div>
                         </div>
@@ -117,9 +133,9 @@ def home():
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Tipo de Membresía</label>
                             <select id="membresia" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <option value="mensual">Membresía Mensual</option>
-                                <option value="trimestral">Membresía Trimestral</option>
-                                <option value="anual">Membresía Anual</option>
+                                <option value="mensual">Membresía Mensual (S/. 120.00)</option>
+                                <option value="trimestral">Membresía Trimestral (S/. 320.00)</option>
+                                <option value="anual">Membresía Anual (S/. 1100.00)</option>
                             </select>
                         </div>
 
@@ -132,7 +148,7 @@ def home():
                 <div class="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 shadow-xl min-h-[400px] flex flex-col justify-center items-center text-center relative overflow-hidden" id="card-resultado">
                     <div id="loading" class="hidden flex-col items-center space-y-3">
                         <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                        <p class="text-sm text-slate-400">Analizando patrones de comportamiento...</p>
+                        <p class="text-sm text-slate-400">Procesando vectores mediante Random Forest...</p>
                     </div>
 
                     <div id="placeholder-text" class="flex flex-col items-center space-y-4">
@@ -174,6 +190,7 @@ def home():
                 document.getElementById('loading').classList.remove('hidden');
 
                 // Obtener datos del formulario
+                const edad = parseFloat(document.getElementById('edad').value);
                 const asistencia_semanal = parseFloat(document.getElementById('asistencia').value);
                 const count_meses = parseFloat(document.getElementById('antiguedad').value);
                 const consumo = parseFloat(document.getElementById('consumo').value);
@@ -181,20 +198,32 @@ def home():
                 const uso_app = parseInt(document.getElementById('uso_app').value);
                 const membresia = document.getElementById('membresia').value;
 
-                // Mapear membresía a las variables dummy correspondientes
+                // Definir costos y flags de membresías ficticias (one-hot)
+                let precio_membresia = 120.00;
+                let m_mensual = 0;
                 let m_trimestral = 0;
-                let m_anual = 0;
-                if (membresia === "trimestral") m_trimestral = 1;
-                if (membresia === "anual") m_anual = 1;
 
+                if (membresia === "mensual") {
+                    precio_membresia = 120.00;
+                    m_mensual = 1;
+                } else if (membresia === "trimestral") {
+                    precio_membresia = 320.00;
+                    m_trimestral = 1;
+                } else if (membresia === "anual") {
+                    precio_membresia = 1100.00;
+                }
+
+                // Generar el payload exacto esperado por el backend
                 const payload = {
-                    asistencia_semanal: asistencia_semanal,
+                    edad: edad,
                     antiguedad_meses: count_meses,
+                    precio_membresia: precio_membresia,
+                    asistencia_semanal: asistencia_semanal,
                     consumo_barra: consumo,
                     uso_app: uso_app,
                     genero_masculino: genero,
-                    membresia_trimestral: m_trimestral,
-                    membresia_anual: m_anual
+                    membresia_mensual: m_mensual,
+                    membresia_trimestral: m_trimestral
                 };
 
                 try {
@@ -203,6 +232,10 @@ def home():
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+
+                    if (!response.ok) {
+                        throw new Error("Respuesta de red incorrecta");
+                    }
 
                     const data = await response.json();
                     
