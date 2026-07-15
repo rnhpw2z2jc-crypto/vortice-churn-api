@@ -10,7 +10,7 @@ app = FastAPI(title="Gimnasio Vórtice S.A.C. - API de IA")
 modelo = joblib.load('modelo_random_forest_vortice.joblib')
 scaler = joblib.load('escalador_vortice.joblib')
 
-# Estructura de datos exacta que el validador de FastAPI necesita comprobar
+# Clase de datos de entrada (Debe coincidir exactamente con lo que envía el JavaScript)
 class DatosCliente(BaseModel):
     edad: float
     antiguedad_meses: float
@@ -24,35 +24,42 @@ class DatosCliente(BaseModel):
 
 @app.post("/predecir_fuga")
 def predecir(cliente: DatosCliente):
-    datos = np.array([[
-        cliente.edad,
-        cliente.antiguedad_meses,
-        cliente.precio_membresia,
-        cliente.asistencia_semanal,
-        cliente.consumo_barra,
-        cliente.uso_app,
-        cliente.genero_masculino,
-        cliente.membresia_mensual,
-        cliente.membresia_trimestral
-    ]])
-    
-    datos_escalados = scaler.transform(datos)
-    probabilidad = modelo.predict_proba(datos_escalados)[0][1]
-    
-    # Clasificación por rangos de riesgo (Semáforo de tres niveles)
-    if probabilidad <= 0.40:
-        riesgo = "BAJO"
-    elif probabilidad <= 0.70:
-        riesgo = "MODERADO"
-    else:
-        riesgo = "ALTO"
-    
-    return {
-        "probabilidad_desercion": round(float(probabilidad), 4),
-        "nivel_riesgo": riesgo
-    }
+    try:
+        # Formar el vector de entrada para el modelo
+        datos = np.array([[
+            cliente.edad,
+            cliente.antiguedad_meses,
+            cliente.precio_membresia,
+            cliente.asistencia_semanal,
+            cliente.consumo_barra,
+            cliente.uso_app,
+            cliente.genero_masculino,
+            cliente.membresia_mensual,
+            cliente.membresia_trimestral
+        ]])
+        
+        # Escalar datos
+        datos_escalados = scaler.transform(datos)
+        
+        # Predecir probabilidades
+        probabilidad = modelo.predict_proba(datos_escalados)[0][1]
+        
+        # Determinar el nivel de riesgo en base a umbrales de negocio
+        if probabilidad <= 0.40:
+            riesgo = "BAJO"
+        elif probabilidad <= 0.70:
+            riesgo = "MODERADO"
+        else:
+            riesgo = "ALTO"
+            
+        return {
+            "probabilidad_desercion": round(float(probabilidad), 4),
+            "nivel_riesgo": riesgo
+        }
+    except Exception as e:
+        # Si algo falla en Python, esto evitará que la API muera en silencio
+        return {"error": str(e), "detalle": "Error interno al procesar los vectores."}
 
-# Ruta que sirve la preciosa interfaz gráfica móvil y dorada
 @app.get("/", response_class=HTMLResponse)
 def home():
     html_content = """
@@ -72,7 +79,7 @@ def home():
                             gold: {
                                 100: '#F4E8C1',
                                 400: '#E5C158',
-                                500: '#D4AF37', // Color exacto dorado corporativo
+                                500: '#D4AF37',
                                 600: '#B8932A',
                                 900: '#4A3B0F'
                             }
@@ -82,10 +89,6 @@ def home():
             }
         </script>
         <style>
-            .gold-gradient-border {
-                background: linear-gradient(135deg, #D4AF37, #4A3B0F);
-                padding: 1px;
-            }
             .gold-text-glow {
                 text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
             }
@@ -93,6 +96,7 @@ def home():
     </head>
     <body class="bg-[#0b0b0b] text-white min-h-screen flex flex-col justify-between font-sans antialiased">
         
+        <!-- Header -->
         <header class="bg-[#121212] border-b border-zinc-800/80 p-4 shadow-xl sticky top-0 z-50">
             <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div class="flex items-center space-x-3 text-center sm:text-left">
@@ -101,7 +105,7 @@ def home():
                     </div>
                     <div>
                         <h1 class="text-lg sm:text-xl font-black tracking-widest text-gold-500 gold-text-glow">VÓRTICE GYM POWER</h1>
-                        <p class="text-[10px] sm:text-xs text-zinc-400 font-medium">Plataforma de Inteligencia Artificial Predictiva</p>
+                        <p class="text-[10px] sm:text-xs text-zinc-400 font-medium">Plataforma de IA - VII Ciclo UCV</p>
                     </div>
                 </div>
                 <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center">
@@ -110,9 +114,11 @@ def home():
             </div>
         </header>
 
+        <!-- Main Content -->
         <main class="max-w-4xl mx-auto p-4 sm:p-6 w-full flex-grow flex flex-col justify-center">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 
+                <!-- Formulario -->
                 <div class="bg-[#141414] p-5 sm:p-6 rounded-2xl border border-zinc-800/60 shadow-2xl flex flex-col justify-between">
                     <div>
                         <h2 class="text-base sm:text-lg font-bold text-zinc-100 mb-4 flex items-center border-b border-zinc-800/60 pb-2">
@@ -175,6 +181,7 @@ def home():
                     </div>
                 </div>
 
+                <!-- Resultados -->
                 <div class="bg-[#141414] p-6 rounded-2xl border border-zinc-800/60 shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center relative overflow-hidden" id="card-resultado">
                     <div id="loading" class="hidden flex-col items-center space-y-3">
                         <div class="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin"></div>
@@ -208,15 +215,17 @@ def home():
             </div>
         </main>
 
+        <!-- Footer -->
         <footer class="bg-[#0e0e0e] p-4 border-t border-zinc-900 text-center text-[10px] sm:text-xs text-zinc-600">
             © 2026 VÓRTICE GYM POWER - VII Ciclo Escuela de Ingeniería de Sistemas UCV. Todos los derechos reservados.
         </footer>
 
+        <!-- Scripts -->
         <script>
             document.getElementById('form-predict').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                // Mostrar cargador y ocultar textos previos
+                // Mostrar cargador
                 document.getElementById('placeholder-text').classList.add('hidden');
                 document.getElementById('resultado-content').classList.add('hidden');
                 document.getElementById('loading').classList.remove('hidden');
@@ -230,21 +239,22 @@ def home():
                 const uso_app = parseInt(document.getElementById('uso_app').value);
                 const membresia = document.getElementById('membresia').value;
 
-                // Definir costos y flags (One-hot Encoding)
-                let precio_membresia = 120.00;
+                // Mapeo preciso One-Hot Encoding
+                let precio_membresia = 120.0;
                 let m_mensual = 0;
                 let m_trimestral = 0;
 
                 if (membresia === "mensual") {
-                    precio_membresia = 120.00;
+                    precio_membresia = 120.0;
                     m_mensual = 1;
                 } else if (membresia === "trimestral") {
-                    precio_membresia = 320.00;
+                    precio_membresia = 320.0;
                     m_trimestral = 1;
                 } else if (membresia === "anual") {
-                    precio_membresia = 1100.00;
+                    precio_membresia = 1100.0;
                 }
 
+                // PAYLOAD EXACTO (Los nombres de las llaves deben coincidir perfectamente con la clase DatosCliente de Python)
                 const payload = {
                     edad: edad,
                     antiguedad_meses: count_meses,
@@ -258,6 +268,26 @@ def home():
                 };
 
                 try {
+                    const response = await fetch('/predecir_fuga', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        console.error("Error devuelto por la API:", data.error);
+                        alert("Error en el modelo: " + data.error);
+                        document.getElementById('loading').classList.add('hidden');
+                        document.getElementById('placeholder-text').classList.remove('hidden');
+                        return;
+                    }
+
+                    // Detener cargador y mostrar resultados
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('resultado-content').classList.remove('hidden');
+
                     const prob_pct = (data.probabilidad_desercion * 100).toFixed(1);
                     document.getElementById('probabilidad-valor').innerText = prob_pct + "%";
 
@@ -267,7 +297,6 @@ def home():
                     const rec = document.getElementById('recomendacion-texto');
 
                     if (data.nivel_riesgo === "ALTO") {
-                        // ROJO - ALTO RIESGO
                         badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase";
                         badge.innerText = "ALERTA: ALTO RIESGO DE FUGA";
                         
@@ -278,18 +307,16 @@ def home():
                         rec.innerText = "Contacto inmediato vía llamada telefónica por el administrador. Ofrecer reajuste de congelamiento de membresía gratuito o un descuento drástico por renovación.";
                     
                     } else if (data.nivel_riesgo === "MODERADO") {
-                        // AMARILLO - RIESGO MODERADO
                         badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase";
                         badge.innerText = "OBSERVACIÓN: RIESGO MODERADO";
                         
                         document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-amber-500";
                         titulo.innerText = "Socio en Alerta Preventiva";
                         titulo.className = "text-base sm:text-lg font-black text-amber-400";
-                        desc.innerText = "Se observa una reducción gradual en la asistencia semanal y una falta de uso del portal web. Patrón de pérdida de hábito.";
-                        rec.innerText = "Enviar mensaje automatizado de WhatsApp con rutina motivacional. Ofrecer un pase libre para un invitado de fin de semana o un batido gratis en la barra de suplementos.";
+                        desc.innerText = "Se observa una reducción gradual en la asistencia semanal y una falta de uso de la plataforma web. Patrón de pérdida de hábito.";
+                        rec.innerText = "Enviar mensaje de WhatsApp con rutina motivacional. Ofrecer un pase libre para un invitado de fin de semana o un batido gratis en la barra de suplementos.";
                     
                     } else {
-                        // VERDE - BAJO RIESGO
                         badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase";
                         badge.innerText = "SOCIO ACTIVO Y CONFORME";
                         
@@ -301,8 +328,8 @@ def home():
                     }
 
                 } catch (error) {
-                    console.error("Error al conectar con el servidor API:", error);
-                    alert("Error crítico al procesar la predicción en el servidor. Asegúrate de que el backend haya desplegado sin errores.");
+                    console.error("Error de comunicación:", error);
+                    alert("Error al conectar con el servidor de Vórtice.");
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('placeholder-text').classList.remove('hidden');
                 }
