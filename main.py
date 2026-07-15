@@ -24,7 +24,6 @@ class DatosCliente(BaseModel):
 
 @app.post("/predecir_fuga")
 def predecir(cliente: DatosCliente):
-    # Vector con las 9 características en el orden de entrenamiento exacto
     datos = np.array([[
         cliente.edad,
         cliente.antiguedad_meses,
@@ -37,16 +36,20 @@ def predecir(cliente: DatosCliente):
         cliente.membresia_trimestral
     ]])
     
-    # Escalar las características numéricas
     datos_escalados = scaler.transform(datos)
-    
-    # Calcular la predicción con el Random Forest
     probabilidad = modelo.predict_proba(datos_escalados)[0][1]
-    alerta = bool(probabilidad > 0.50) 
+    
+    # Clasificación por rangos de riesgo (Semáforo de tres niveles)
+    if probabilidad <= 0.40:
+        riesgo = "BAJO"
+    elif probabilidad <= 0.70:
+        riesgo = "MODERADO"
+    else:
+        riesgo = "ALTO"
     
     return {
         "probabilidad_desercion": round(float(probabilidad), 4),
-        "alerta_de_fuga": alerta
+        "nivel_riesgo": riesgo
     }
 
 # Ruta que sirve la preciosa interfaz gráfica móvil y dorada
@@ -255,22 +258,6 @@ def home():
                 };
 
                 try {
-                    const response = await fetch('/predecir_fuga', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error("Error en respuesta de red");
-                    }
-
-                    const data = await response.json();
-                    
-                    // Detener cargador
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('resultado-content').classList.remove('hidden');
-
                     const prob_pct = (data.probabilidad_desercion * 100).toFixed(1);
                     document.getElementById('probabilidad-valor').innerText = prob_pct + "%";
 
@@ -279,24 +266,38 @@ def home():
                     const desc = document.getElementById('resultado-descripcion');
                     const rec = document.getElementById('recomendacion-texto');
 
-                    if (data.alerta_de_fuga) {
+                    if (data.nivel_riesgo === "ALTO") {
+                        // ROJO - ALTO RIESGO
                         badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase";
-                        badge.innerText = "ALERTA: RIESGO DE FUGA DETECTADO";
+                        badge.innerText = "ALERTA: ALTO RIESGO DE FUGA";
                         
                         document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-rose-500";
                         titulo.innerText = "Socio Propenso a Retirarse";
                         titulo.className = "text-base sm:text-lg font-black text-rose-400";
-                        desc.innerText = "El algoritmo identificó un patrón de baja interacción con la marca, baja asistencia y nulo consumo cruzado.";
-                        rec.innerText = "Contactarlo inmediatamente por WhatsApp. Ofrecerle una consulta gratuita con el nutricionista de la barra o un descuento especial del 15% en su próxima renovación.";
+                        desc.innerText = "El algoritmo identificó un patrón crítico de inactividad prolongada y nulo consumo. La deserción es inminente.";
+                        rec.innerText = "Contacto inmediato vía llamada telefónica por el administrador. Ofrecer reajuste de congelamiento de membresía gratuito o un descuento drástico por renovación.";
+                    
+                    } else if (data.nivel_riesgo === "MODERADO") {
+                        // AMARILLO - RIESGO MODERADO
+                        badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase";
+                        badge.innerText = "OBSERVACIÓN: RIESGO MODERADO";
+                        
+                        document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-amber-500";
+                        titulo.innerText = "Socio en Alerta Preventiva";
+                        titulo.className = "text-base sm:text-lg font-black text-amber-400";
+                        desc.innerText = "Se observa una reducción gradual en la asistencia semanal y una falta de uso del portal web. Patrón de pérdida de hábito.";
+                        rec.innerText = "Enviar mensaje automatizado de WhatsApp con rutina motivacional. Ofrecer un pase libre para un invitado de fin de semana o un batido gratis en la barra de suplementos.";
+                    
                     } else {
+                        // VERDE - BAJO RIESGO
                         badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase";
                         badge.innerText = "SOCIO ACTIVO Y CONFORME";
                         
                         document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-emerald-500";
                         titulo.innerText = "Cliente Saludable";
                         titulo.className = "text-base sm:text-lg font-black text-emerald-400";
-                        desc.innerText = "El socio asiste de manera constante y consume habitualmente servicios en la barra. No representa un peligro inmediato.";
-                        rec.innerText = "Mantener excelente atención. Invitarlo a probar los nuevos suplementos o batidos de la barra mediante notificaciones push automáticas.";
+                        desc.innerText = "El socio mantiene una asistencia constante alineada a sus promedios históricos y consume activamente productos de valor agregado.";
+                        rec.innerText = "Mantener excelente estándar de servicio en sala de musculación. Invitar a participar en retos internos del gimnasio o felicitación automatizada por hitos de asistencia.";
                     }
 
                 } catch (error) {
