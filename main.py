@@ -24,9 +24,7 @@ class DatosCliente(BaseModel):
 
 @app.post("/predecir_fuga")
 def predecir(cliente: DatosCliente):
-    # Crear el vector con exactamente las 9 características en el orden de entrenamiento:
-    # ['Edad', 'Antiguedad_Meses', 'Precio_Membresia_Soles', 'Asistencia_Semanal_Promedio', 
-    #  'Consumo_Barra_Soles', 'Uso_App_Web', 'Genero_Masculino', 'Tipo_Membresia_Mensual', 'Tipo_Membresia_Trimestral']
+    # Vector con las 9 características en el orden de entrenamiento exacto
     datos = np.array([[
         cliente.edad,
         cliente.antiguedad_meses,
@@ -42,16 +40,16 @@ def predecir(cliente: DatosCliente):
     # Escalar las características numéricas
     datos_escalados = scaler.transform(datos)
     
-    # Calcular la predicción
+    # Calcular la predicción con el Random Forest
     probabilidad = modelo.predict_proba(datos_escalados)[0][1]
-    alerta = bool(probabilidad > 0.50) # Umbral del 50% para definir fuga
+    alerta = bool(probabilidad > 0.50) 
     
     return {
         "probabilidad_desercion": round(float(probabilidad), 4),
         "alerta_de_fuga": alerta
     }
 
-# Ruta que sirve la preciosa interfaz gráfica actualizada
+# Ruta que sirve la preciosa interfaz gráfica móvil y dorada
 @app.get("/", response_class=HTMLResponse)
 def home():
     html_content = """
@@ -59,116 +57,147 @@ def home():
     <html lang="es">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Vórtice S.A.C. - IA Predicción de Deserción</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Vórtice Gym Power - IA Predicción de Deserción</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            gold: {
+                                100: '#F4E8C1',
+                                400: '#E5C158',
+                                500: '#D4AF37', // Color exacto dorado corporativo
+                                600: '#B8932A',
+                                900: '#4A3B0F'
+                            }
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            .gold-gradient-border {
+                background: linear-gradient(135deg, #D4AF37, #4A3B0F);
+                padding: 1px;
+            }
+            .gold-text-glow {
+                text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+            }
+        </style>
     </head>
-    <body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between font-sans">
-        <header class="bg-slate-950 border-b border-slate-800 p-4 shadow-lg">
-            <div class="max-w-6xl mx-auto flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-indigo-600 p-2.5 rounded-lg text-white">
+    <body class="bg-[#0b0b0b] text-white min-h-screen flex flex-col justify-between font-sans antialiased">
+        
+        <header class="bg-[#121212] border-b border-zinc-800/80 p-4 shadow-xl sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center space-x-3 text-center sm:text-left">
+                    <div class="bg-gradient-to-br from-gold-500 to-gold-600 p-2 rounded-lg text-black shadow-md shadow-gold-500/20">
                         <i class="fa-solid fa-dumbbell text-xl animate-pulse"></i>
                     </div>
                     <div>
-                        <h1 class="text-xl font-bold tracking-wider text-indigo-400">GIMNASIO VÓRTICE S.A.C.</h1>
-                        <p class="text-xs text-slate-400">Plataforma de Inteligencia Artificial Predictiva</p>
+                        <h1 class="text-lg sm:text-xl font-black tracking-widest text-gold-500 gold-text-glow">VÓRTICE GYM POWER</h1>
+                        <p class="text-[10px] sm:text-xs text-zinc-400 font-medium">Plataforma de Inteligencia Artificial Predictiva</p>
                     </div>
                 </div>
-                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full flex items-center">
+                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-ping"></span> Servidor Activo
                 </span>
             </div>
         </header>
 
-        <main class="max-w-4xl mx-auto p-6 w-full flex-grow flex flex-col justify-center">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <main class="max-w-4xl mx-auto p-4 sm:p-6 w-full flex-grow flex flex-col justify-center">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 
-                <div class="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 shadow-xl">
-                    <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
-                        <i class="fa-solid fa-user-gear mr-2 text-indigo-500"></i> Datos del Socio a Evaluar
-                    </h2>
-                    
-                    <form id="form-predict" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">Edad del Socio</label>
-                                <input type="number" min="14" max="90" id="edad" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 26" required>
+                <div class="bg-[#141414] p-5 sm:p-6 rounded-2xl border border-zinc-800/60 shadow-2xl flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-zinc-100 mb-4 flex items-center border-b border-zinc-800/60 pb-2">
+                            <i class="fa-solid fa-user-gear mr-2 text-gold-500"></i> Datos del Socio a Evaluar
+                        </h2>
+                        
+                        <form id="form-predict" class="space-y-3.5">
+                            <div class="grid grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Edad del Socio</label>
+                                    <input type="number" min="14" max="90" id="edad" class="w-full bg-[#1c1c1c] border border-zinc-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all" placeholder="Ej: 26" required>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Asistencia Semanal</label>
+                                    <input type="number" step="0.1" min="0" max="7" id="asistencia" class="w-full bg-[#1c1c1c] border border-zinc-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all" placeholder="Ej: 3.5" required>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">Asistencias Semanales</label>
-                                <input type="number" step="0.1" min="0" max="7" id="asistencia" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 3.5" required>
-                            </div>
-                        </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">Antigüedad (Meses)</label>
-                                <input type="number" min="0" id="antiguedad" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 6" required>
+                            <div class="grid grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Antigüedad (Meses)</label>
+                                    <input type="number" min="0" id="antiguedad" class="w-full bg-[#1c1c1c] border border-zinc-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all" placeholder="Ej: 6" required>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Consumo Barra (S/.)</label>
+                                    <input type="number" step="0.1" min="0" id="consumo" class="w-full bg-[#1c1c1c] border border-zinc-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all" placeholder="Ej: 45.90" required>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">Consumo Barra (S/.)</label>
-                                <input type="number" step="0.1" min="0" id="consumo" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 45.90" required>
-                            </div>
-                        </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Género</label>
+                                    <select id="genero" class="w-full bg-[#1c1c1c] border border-zinc-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all">
+                                        <option value="1">Masculino</option>
+                                        <option value="0">Femenino</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Plataforma Web</label>
+                                    <select id="uso_app" class="w-full bg-[#1c1c1c] border border-zinc-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all">
+                                        <option value="1">Sí usa la Web</option>
+                                        <option value="0">No usa la Web</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">Género</label>
-                                <select id="genero" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <option value="1">Masculino</option>
-                                    <option value="0">Femenino</option>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Tipo de Membresía</label>
+                                <select id="membresia" class="w-full bg-[#1c1c1c] border border-zinc-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all">
+                                    <option value="mensual">Membresía Mensual (S/. 120.00)</option>
+                                    <option value="trimestral">Membresía Trimestral (S/. 320.00)</option>
+                                    <option value="anual">Membresía Anual (S/. 1100.00)</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">Usa Plataforma Web</label>
-                                <select id="uso_app" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <option value="1">Sí usa la Web</option>
-                                    <option value="0">No usa la Web</option>
-                                </select>
-                            </div>
-                        </div>
 
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Tipo de Membresía</label>
-                            <select id="membresia" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <option value="mensual">Membresía Mensual (S/. 120.00)</option>
-                                <option value="trimestral">Membresía Trimestral (S/. 320.00)</option>
-                                <option value="anual">Membresía Anual (S/. 1100.00)</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all py-3 rounded-lg font-bold text-sm tracking-wider flex justify-center items-center">
-                            <i class="fa-solid fa-brain mr-2"></i> Calcular Riesgo de Fuga
-                        </button>
-                    </form>
+                            <button type="submit" class="w-full mt-4 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm tracking-wider flex justify-center items-center shadow-lg shadow-gold-500/10">
+                                <i class="fa-solid fa-brain mr-2"></i> Calcular Riesgo de Fuga
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
-                <div class="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 shadow-xl min-h-[400px] flex flex-col justify-center items-center text-center relative overflow-hidden" id="card-resultado">
+                <div class="bg-[#141414] p-6 rounded-2xl border border-zinc-800/60 shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center relative overflow-hidden" id="card-resultado">
                     <div id="loading" class="hidden flex-col items-center space-y-3">
-                        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                        <p class="text-sm text-slate-400">Procesando vectores mediante Random Forest...</p>
+                        <div class="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-sm text-zinc-400">Procesando vectores mediante Random Forest...</p>
                     </div>
 
-                    <div id="placeholder-text" class="flex flex-col items-center space-y-4">
-                        <i class="fa-solid fa-chart-line text-5xl text-slate-600"></i>
-                        <p class="text-slate-400 text-sm max-w-[280px]">Ingresa los datos de comportamiento del socio en la izquierda para predecir si continuará o se fugará.</p>
+                    <div id="placeholder-text" class="flex flex-col items-center space-y-4 px-4">
+                        <div class="p-4 bg-zinc-900/50 rounded-full border border-zinc-800/50">
+                            <i class="fa-solid fa-chart-line text-4xl text-gold-500"></i>
+                        </div>
+                        <p class="text-zinc-400 text-xs sm:text-sm max-w-[280px] leading-relaxed">Ingresa los datos de comportamiento del socio en el formulario para predecir si continuará o se fugará.</p>
                     </div>
 
-                    <div id="resultado-content" class="hidden w-full flex flex-col items-center space-y-4">
-                        <span id="alerta-badge" class="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider"></span>
+                    <div id="resultado-content" class="hidden w-full flex flex-col items-center space-y-4 px-2">
+                        <span id="alerta-badge" class="px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest"></span>
                         
                         <div class="relative flex items-center justify-center">
-                            <div class="text-5xl font-black" id="probabilidad-valor">0%</div>
+                            <div class="text-5xl sm:text-6xl font-black" id="probabilidad-valor">0%</div>
                         </div>
                         
-                        <h3 class="text-lg font-bold" id="resultado-titulo"></h3>
-                        <p class="text-slate-400 text-sm max-w-[300px]" id="resultado-descripcion"></p>
+                        <h3 class="text-base sm:text-lg font-black tracking-wide" id="resultado-titulo"></h3>
+                        <p class="text-zinc-400 text-xs sm:text-sm max-w-[320px] leading-relaxed" id="resultado-descripcion"></p>
                         
-                        <div class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-left mt-2">
-                            <span class="text-xs text-indigo-400 font-semibold block mb-1">Plan de acción recomendado:</span>
-                            <p class="text-xs text-slate-300" id="recomendacion-texto"></p>
+                        <div class="w-full bg-[#1c1c1c] border border-zinc-800 p-4 rounded-xl text-left mt-2 shadow-inner">
+                            <span class="text-xs text-gold-400 font-bold block mb-1 uppercase tracking-wider"><i class="fa-solid fa-hand-holding-heart mr-1.5"></i> Plan recomendado:</span>
+                            <p class="text-xs text-zinc-300 leading-relaxed" id="recomendacion-texto"></p>
                         </div>
                     </div>
                 </div>
@@ -176,15 +205,15 @@ def home():
             </div>
         </main>
 
-        <footer class="bg-slate-950 p-4 border-t border-slate-800 text-center text-xs text-slate-500">
-            © 2026 Gimnasio Vórtice S.A.C. - VII Ciclo Escuela de Ingeniería de Sistemas UCV. Todos los derechos reservados.
+        <footer class="bg-[#0e0e0e] p-4 border-t border-zinc-900 text-center text-[10px] sm:text-xs text-zinc-600">
+            © 2026 VÓRTICE GYM POWER - VII Ciclo Escuela de Ingeniería de Sistemas UCV. Todos los derechos reservados.
         </footer>
 
         <script>
             document.getElementById('form-predict').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                // Mostrar cargador
+                // Mostrar cargador y ocultar textos previos
                 document.getElementById('placeholder-text').classList.add('hidden');
                 document.getElementById('resultado-content').classList.add('hidden');
                 document.getElementById('loading').classList.remove('hidden');
@@ -198,7 +227,7 @@ def home():
                 const uso_app = parseInt(document.getElementById('uso_app').value);
                 const membresia = document.getElementById('membresia').value;
 
-                // Definir costos y flags de membresías ficticias (one-hot)
+                // Definir costos y flags (One-hot Encoding)
                 let precio_membresia = 120.00;
                 let m_mensual = 0;
                 let m_trimestral = 0;
@@ -213,7 +242,6 @@ def home():
                     precio_membresia = 1100.00;
                 }
 
-                // Generar el payload exacto esperado por el backend
                 const payload = {
                     edad: edad,
                     antiguedad_meses: count_meses,
@@ -234,12 +262,12 @@ def home():
                     });
 
                     if (!response.ok) {
-                        throw new Error("Respuesta de red incorrecta");
+                        throw new Error("Error en respuesta de red");
                     }
 
                     const data = await response.json();
                     
-                    // Ocultar cargador
+                    // Detener cargador
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('resultado-content').classList.remove('hidden');
 
@@ -252,28 +280,28 @@ def home():
                     const rec = document.getElementById('recomendacion-texto');
 
                     if (data.alerta_de_fuga) {
-                        badge.className = "px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20";
-                        badge.innerText = "RIESGO DE DESERCIÓN DETECTADO";
+                        badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase";
+                        badge.innerText = "ALERTA: RIESGO DE FUGA DETECTADO";
                         
-                        document.getElementById('probabilidad-valor').className = "text-5xl font-black text-rose-500";
-                        titulo.innerText = "¡Socio Propenso a Retirarse!";
-                        titulo.className = "text-lg font-bold text-rose-400";
-                        desc.innerText = "El algoritmo de Inteligencia Artificial detectó que el socio tiene un patrón conductual de alta inestabilidad.";
-                        rec.innerText = "Ejecutar alerta inmediata de fidelización. Ofrecer pase libre de barra nutricional o promoción en renovación anual para reengancharlo.";
+                        document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-rose-500";
+                        titulo.innerText = "Socio Propenso a Retirarse";
+                        titulo.className = "text-base sm:text-lg font-black text-rose-400";
+                        desc.innerText = "El algoritmo identificó un patrón de baja interacción con la marca, baja asistencia y nulo consumo cruzado.";
+                        rec.innerText = "Contactarlo inmediatamente por WhatsApp. Ofrecerle una consulta gratuita con el nutricionista de la barra o un descuento especial del 15% en su próxima renovación.";
                     } else {
-                        badge.className = "px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                        badge.innerText = "CLIENTE ESTABLE";
+                        badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase";
+                        badge.innerText = "SOCIO ACTIVO Y CONFORME";
                         
-                        document.getElementById('probabilidad-valor').className = "text-5xl font-black text-emerald-500";
-                        titulo.innerText = "Socio Conforme y Activo";
-                        titulo.className = "text-lg font-bold text-emerald-400";
-                        desc.innerText = "El cliente posee hábitos estables dentro de las instalaciones y no muestra intenciones de cancelar.";
-                        rec.innerText = "Mantener estándar de servicio. Se sugiere enviarle encuestas de satisfacción periódicas automáticas vía correo electrónico.";
+                        document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-emerald-500";
+                        titulo.innerText = "Cliente Saludable";
+                        titulo.className = "text-base sm:text-lg font-black text-emerald-400";
+                        desc.innerText = "El socio asiste de manera constante y consume habitualmente servicios en la barra. No representa un peligro inmediato.";
+                        rec.innerText = "Mantener excelente atención. Invitarlo a probar los nuevos suplementos o batidos de la barra mediante notificaciones push automáticas.";
                     }
 
                 } catch (error) {
                     console.error("Error al conectar con el servidor API:", error);
-                    alert("Error al procesar la predicción en el servidor.");
+                    alert("Error crítico al procesar la predicción en el servidor. Asegúrate de que el backend haya desplegado sin errores.");
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('placeholder-text').classList.remove('hidden');
                 }
