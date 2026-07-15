@@ -10,7 +10,7 @@ app = FastAPI(title="Gimnasio Vórtice S.A.C. - API de IA")
 modelo = joblib.load('modelo_random_forest_vortice.joblib')
 scaler = joblib.load('escalador_vortice.joblib')
 
-# Clase de datos de entrada (Debe coincidir exactamente con lo que envía el JavaScript)
+# Clase de datos de entrada (Coincide exactamente con el formulario)
 class DatosCliente(BaseModel):
     edad: float
     antiguedad_meses: float
@@ -25,7 +25,7 @@ class DatosCliente(BaseModel):
 @app.post("/predecir_fuga")
 def predecir(cliente: DatosCliente):
     try:
-        # Formar el vector de entrada para el modelo
+        # Formar el vector con las 9 características en el orden exacto de entrenamiento
         datos = np.array([[
             cliente.edad,
             cliente.antiguedad_meses,
@@ -44,20 +44,14 @@ def predecir(cliente: DatosCliente):
         # Predecir probabilidades
         probabilidad = modelo.predict_proba(datos_escalados)[0][1]
         
-        # Determinar el nivel de riesgo en base a umbrales de negocio
-        if probabilidad <= 0.40:
-            riesgo = "BAJO"
-        elif probabilidad <= 0.70:
-            riesgo = "MODERADO"
-        else:
-            riesgo = "ALTO"
+        # Lógica binaria original basada en el umbral del 50%
+        alerta = bool(probabilidad > 0.50)
             
         return {
             "probabilidad_desercion": round(float(probabilidad), 4),
-            "nivel_riesgo": riesgo
+            "alerta_de_fuga": alerta
         }
     except Exception as e:
-        # Si algo falla en Python, esto evitará que la API muera en silencio
         return {"error": str(e), "detalle": "Error interno al procesar los vectores."}
 
 @app.get("/", response_class=HTMLResponse)
@@ -79,7 +73,7 @@ def home():
                             gold: {
                                 100: '#F4E8C1',
                                 400: '#E5C158',
-                                500: '#D4AF37',
+                                500: '#D4AF37', // Color corporativo del logo de Vórtice
                                 600: '#B8932A',
                                 900: '#4A3B0F'
                             }
@@ -114,7 +108,7 @@ def home():
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- Main Content (Responsivo: 1 col móvil, 2 cols PC) -->
         <main class="max-w-4xl mx-auto p-4 sm:p-6 w-full flex-grow flex flex-col justify-center">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 
@@ -174,9 +168,15 @@ def home():
                                 </select>
                             </div>
 
-                            <button type="submit" class="w-full mt-4 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm tracking-wider flex justify-center items-center shadow-lg shadow-gold-500/10">
-                                <i class="fa-solid fa-brain mr-2"></i> Calcular Riesgo de Fuga
-                            </button>
+                            <!-- Botones de Acción -->
+                            <div class="flex gap-2 mt-4">
+                                <button type="submit" class="flex-grow bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm tracking-wider flex justify-center items-center shadow-lg shadow-gold-500/10">
+                                    <i class="fa-solid fa-brain mr-2"></i> Calcular Riesgo
+                                </button>
+                                <button type="button" id="btn-reset" class="bg-zinc-800 hover:bg-zinc-700 active:scale-[0.98] text-zinc-300 transition-all px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center border border-zinc-700/50" title="Limpiar formulario">
+                                    <i class="fa-solid fa-rotate-right"></i>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -222,6 +222,17 @@ def home():
 
         <!-- Scripts -->
         <script>
+            // Lógica para limpiar/refrescar los casilleros
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                // Limpiar formulario HTML
+                document.getElementById('form-predict').reset();
+                
+                // Restablecer la tarjeta de resultados al estado inicial
+                document.getElementById('resultado-content').classList.add('hidden');
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('placeholder-text').classList.remove('hidden');
+            });
+
             document.getElementById('form-predict').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
@@ -254,7 +265,6 @@ def home():
                     precio_membresia = 1100.0;
                 }
 
-                // PAYLOAD EXACTO (Los nombres de las llaves deben coincidir perfectamente con la clase DatosCliente de Python)
                 const payload = {
                     edad: edad,
                     antiguedad_meses: count_meses,
@@ -296,27 +306,19 @@ def home():
                     const desc = document.getElementById('resultado-descripcion');
                     const rec = document.getElementById('recomendacion-texto');
 
-                    if (data.nivel_riesgo === "ALTO") {
+                    if (data.alerta_de_fuga) {
+                        // ROJO - ALTO RIESGO DE DESERCIÓN
                         badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase";
-                        badge.innerText = "ALERTA: ALTO RIESGO DE FUGA";
+                        badge.innerText = "ALERTA: RIESGO DE FUGA DETECTADO";
                         
                         document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-rose-500";
                         titulo.innerText = "Socio Propenso a Retirarse";
                         titulo.className = "text-base sm:text-lg font-black text-rose-400";
-                        desc.innerText = "El algoritmo identificó un patrón crítico de inactividad prolongada y nulo consumo. La deserción es inminente.";
-                        rec.innerText = "Contacto inmediato vía llamada telefónica por el administrador. Ofrecer reajuste de congelamiento de membresía gratuito o un descuento drástico por renovación.";
-                    
-                    } else if (data.nivel_riesgo === "MODERADO") {
-                        badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase";
-                        badge.innerText = "OBSERVACIÓN: RIESGO MODERADO";
-                        
-                        document.getElementById('probabilidad-valor').className = "text-5xl sm:text-6xl font-black text-amber-500";
-                        titulo.innerText = "Socio en Alerta Preventiva";
-                        titulo.className = "text-base sm:text-lg font-black text-amber-400";
-                        desc.innerText = "Se observa una reducción gradual en la asistencia semanal y una falta de uso de la plataforma web. Patrón de pérdida de hábito.";
-                        rec.innerText = "Enviar mensaje de WhatsApp con rutina motivacional. Ofrecer un pase libre para un invitado de fin de semana o un batido gratis en la barra de suplementos.";
+                        desc.innerText = "El algoritmo identificó un patrón de baja interacción con la marca, baja asistencia y nulo consumo cruzado.";
+                        rec.innerText = "Contactar inmediatamente por WhatsApp. Ofrecerle una consulta gratuita con el nutricionista de la barra o un descuento especial del 15% en su próxima renovación.";
                     
                     } else {
+                        // VERDE - BAJO RIESGO / SOCIO ACTIVO
                         badge.className = "px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase";
                         badge.innerText = "SOCIO ACTIVO Y CONFORME";
                         
