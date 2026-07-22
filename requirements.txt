@@ -1,6 +1,17 @@
-fastapi
-uvicorn
-pydantic
-joblib
-scikit-learn
-numpy
+# API y Servidor
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+
+# Machine Learning
+scikit-learn==1.4.0
+numpy==1.26.3
+pandas==2.1.4
+joblib==1.3.2
+
+# Visualización (para evaluación del modelo)
+matplotlib==3.8.2
+seaborn==0.13.1
+
+# Utilidades
+python-multipart==0.0.6
