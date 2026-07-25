@@ -501,8 +501,27 @@ async def home():
         </footer>
 
         <script>
-            let historial = [];
-            let stats = { total: 0, en_riesgo: 0, seguros: 0, ahorro: 0 };
+            let historialLocal = [];
+            let statsLocal = { total: 0, en_riesgo: 0, seguros: 0, ahorro: 0 };
+
+            async function cargarStatsDesdeAPI() {
+                try {
+                    const res = await fetch('/dashboard/stats');
+                    const data = await res.json();
+                    statsLocal.total = data.total_predicciones;
+                    statsLocal.en_riesgo = data.clientes_en_riesgo;
+                    statsLocal.seguros = data.clientes_seguros;
+                    statsLocal.ahorro = data.ahorro_estimado;
+                    actualizarStatsUI();
+                } catch(e) { console.error('Error cargando stats:', e); }
+            }
+
+            function actualizarStatsUI() {
+                document.getElementById('stat-total').textContent = statsLocal.total;
+                document.getElementById('stat-riesgo').textContent = statsLocal.en_riesgo;
+                document.getElementById('stat-seguros').textContent = statsLocal.seguros;
+                document.getElementById('stat-ahorro').textContent = 'S/. ' + statsLocal.ahorro.toLocaleString();
+            }
 
             function showSection(name) {
                 document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
@@ -539,13 +558,6 @@ async def home():
                 ], null, 2);
             }
 
-            function actualizarStats() {
-                document.getElementById('stat-total').textContent = stats.total;
-                document.getElementById('stat-riesgo').textContent = stats.en_riesgo;
-                document.getElementById('stat-seguros').textContent = stats.seguros;
-                document.getElementById('stat-ahorro').textContent = 'S/. ' + stats.ahorro.toLocaleString();
-            }
-
             function getRiskColor(riesgo) {
                 const colors = { 'BAJO': 'emerald', 'MEDIO': 'yellow', 'ALTO': 'orange', 'CRÍTICO': 'rose' };
                 return colors[riesgo] || 'zinc';
@@ -557,7 +569,7 @@ async def home():
                 const color = getRiskColor(riesgo);
                 let dots = '';
                 for (let i = 0; i < 4; i++) {
-                    dots += `<div class="w-2 h-2 rounded-full ${i < n ? `bg-${color}-400` : 'bg-zinc-700'}"></div>`;
+                    dots += '<div class="w-2 h-2 rounded-full ' + (i < n ? 'bg-' + color + '-400' : 'bg-zinc-700') + '"></div>';
                 }
                 return dots;
             }
@@ -598,29 +610,23 @@ async def home():
                     const titulo = data.alerta_de_fuga ? 'Socio Propenso a Fugarse' : 'Cliente Estable y Conforme';
 
                     document.getElementById('r-prob').textContent = pct + '%';
-                    document.getElementById('r-prob').className = `text-6xl font-black text-${color}-400`;
-                    document.getElementById('r-badge').className = `px-3 py-1 rounded-full text-[10px] font-bold tracking-widest bg-${color}-500/10 text-${color}-400 border border-${color}-500/20 uppercase`;
+                    document.getElementById('r-prob').className = 'text-6xl font-black text-' + color + '-400';
+                    document.getElementById('r-badge').className = 'px-3 py-1 rounded-full text-[10px] font-bold tracking-widest bg-' + color + '-500/10 text-' + color + '-400 border border-' + color + '-500/20 uppercase';
                     document.getElementById('r-badge').textContent = badgeText;
                     document.getElementById('r-titulo').textContent = titulo;
-                    document.getElementById('r-titulo').className = `text-sm text-${color}-400`;
+                    document.getElementById('r-titulo').className = 'text-sm text-' + color + '-400';
                     document.getElementById('r-recomendacion').textContent = data.recomendacion;
                     document.getElementById('r-riesgo').textContent = data.nivel_riesgo;
-                    document.getElementById('r-riesgo').className = `text-sm font-bold text-${color}-400`;
+                    document.getElementById('r-riesgo').className = 'text-sm font-bold text-' + color + '-400';
                     document.getElementById('r-riesgo-dots').innerHTML = getRiesgoDots(data.nivel_riesgo);
                     document.getElementById('r-timestamp').textContent = new Date(data.timestamp).toLocaleString('es-PE');
                     const ahorro = data.alerta_de_fuga ? 1800 : 0;
-                    document.getElementById('r-impacto').textContent = data.alerta_de_fuga ? `Si retienes este socio, puedes ahorrar S/. ${ahorro.toLocaleString()} en costos de reemplazo.` : 'Este socio genera valor constante. Mantén la experiencia de servicio.';
+                    document.getElementById('r-impacto').textContent = data.alerta_de_fuga ? 'Si retienes este socio, puedes ahorrar S/. ' + ahorro.toLocaleString() + ' en costos de reemplazo.' : 'Este socio genera valor constante. Mantén la experiencia de servicio.';
 
-                    stats.total++;
-                    if (data.alerta_de_fuga) stats.en_riesgo++; else stats.seguros++;
-                    stats.ahorro += ahorro;
-                    actualizarStats();
-
-                    historial.unshift({ id: '#' + stats.total, prob: pct + '%', riesgo: data.nivel_riesgo, alerta: data.alerta_de_fuga, fecha: new Date(data.timestamp).toLocaleString('es-PE') });
-                    if (historial.length > 10) historial.pop();
+                    await cargarStatsDesdeAPI();
 
                 } catch (err) {
-                    alert('Error de conexión: ' + err.message);
+                    alert('Error de conexion: ' + err.message);
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('placeholder').classList.remove('hidden');
                 }
@@ -638,42 +644,41 @@ async def home():
                 const socios = parseInt(document.getElementById('roi-socios').value);
                 const cac = parseFloat(document.getElementById('roi-cac').value);
                 const ltv = parseFloat(document.getElementById('roi-ltv').value);
-                const tasaDesercion = stats.total > 0 ? stats.en_riesgo / stats.total : 0.35;
+                const tasaDesercion = statsLocal.total > 0 ? statsLocal.en_riesgo / statsLocal.total : 0.35;
                 const clientesEnRiesgo = Math.round(socios * tasaDesercion);
                 const ahorro = clientesEnRiesgo * ltv * 0.3;
                 const inversion = 2400;
                 const roi = ((ahorro - inversion) / inversion * 100).toFixed(0);
                 const payback = (inversion / (ahorro / 12)).toFixed(1);
 
-                document.getElementById('roi-resultados').innerHTML = `
-                    <div class="space-y-4">
-                        <div class="text-center mb-4">
-                            <div class="text-5xl font-black text-gold-400 mb-1">${roi}%</div>
-                            <p class="text-xs text-zinc-400">Retorno de Inversión Anual</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">
-                                <p class="text-2xl font-bold text-rose-400">${clientesEnRiesgo}</p>
-                                <p class="text-[10px] text-zinc-500">Clientes en Riesgo</p>
-                            </div>
-                            <div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">
-                                <p class="text-2xl font-bold text-emerald-400">S/. ${ahorro.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
-                                <p class="text-[10px] text-zinc-500">Ahorro Anual</p>
-                            </div>
-                            <div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">
-                                <p class="text-2xl font-bold text-gold-400">${payback} meses</p>
-                                <p class="text-[10px] text-zinc-500">Payback Period</p>
-                            </div>
-                            <div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">
-                                <p class="text-2xl font-bold text-zinc-300">S/. ${inversion.toLocaleString()}</p>
-                                <p class="text-[10px] text-zinc-500">Inversión Sistema</p>
-                            </div>
-                        </div>
-                        <div class="bg-gold-400/5 border border-gold-400/20 p-4 rounded-xl mt-3">
-                            <p class="text-xs text-gold-400 font-bold mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> Resumen Ejecutivo</p>
-                            <p class="text-xs text-zinc-400">Con ${socios} socios y una tasa de deserción del ${(tasaDesercion*100).toFixed(0)}%, el sistema Vórtice puede retener hasta ${clientesEnRiesgo} clientes, generando un ahorro de S/. ${ahorro.toLocaleString(undefined, {maximumFractionDigits:0})} anuales con un payback de ${payback} meses.</p>
-                        </div>
-                    </div>`;
+                document.getElementById('roi-resultados').innerHTML = '<div class="space-y-4">' +
+                    '<div class="text-center mb-4">' +
+                        '<div class="text-5xl font-black text-gold-400 mb-1">' + roi + '%</div>' +
+                        '<p class="text-xs text-zinc-400">Retorno de Inversion Anual</p>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-2 gap-3">' +
+                        '<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">' +
+                            '<p class="text-2xl font-bold text-rose-400">' + clientesEnRiesgo + '</p>' +
+                            '<p class="text-[10px] text-zinc-500">Clientes en Riesgo</p>' +
+                        '</div>' +
+                        '<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">' +
+                            '<p class="text-2xl font-bold text-emerald-400">S/. ' + ahorro.toLocaleString(undefined, {maximumFractionDigits:0}) + '</p>' +
+                            '<p class="text-[10px] text-zinc-500">Ahorro Anual</p>' +
+                        '</div>' +
+                        '<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">' +
+                            '<p class="text-2xl font-bold text-gold-400">' + payback + ' meses</p>' +
+                            '<p class="text-[10px] text-zinc-500">Payback Period</p>' +
+                        '</div>' +
+                        '<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 text-center">' +
+                            '<p class="text-2xl font-bold text-zinc-300">S/. ' + inversion.toLocaleString() + '</p>' +
+                            '<p class="text-[10px] text-zinc-500">Inversion Sistema</p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="bg-gold-400/5 border border-gold-400/20 p-4 rounded-xl mt-3">' +
+                        '<p class="text-xs text-gold-400 font-bold mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> Resumen Ejecutivo</p>' +
+                        '<p class="text-xs text-zinc-400">Con ' + socios + ' socios y una tasa de desercion del ' + (tasaDesercion*100).toFixed(0) + '%, el sistema Vortice puede retener hasta ' + clientesEnRiesgo + ' clientes, generando un ahorro de S/. ' + ahorro.toLocaleString(undefined, {maximumFractionDigits:0}) + ' anuales con un payback de ' + payback + ' meses.</p>' +
+                    '</div>' +
+                '</div>';
             });
 
             async function procesarLote() {
@@ -681,20 +686,18 @@ async def home():
                     const clientes = JSON.parse(document.getElementById('lote-input').value);
                     const res = await fetch('/predecir_lote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientes }) });
                     const data = await res.json();
-                    let html = `<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 mb-3">
-                        <div class="grid grid-cols-4 gap-2 text-center">
-                            <div><p class="text-lg font-bold text-white">${data.total_clientes}</p><p class="text-[9px] text-zinc-500">Total</p></div>
-                            <div><p class="text-lg font-bold text-rose-400">${data.en_riesgo}</p><p class="text-[9px] text-zinc-500">En Riesgo</p></div>
-                            <div><p class="text-lg font-bold text-emerald-400">${data.seguros}</p><p class="text-[9px] text-zinc-500">Seguros</p></div>
-                            <div><p class="text-lg font-bold text-gold-400">S/. ${data.ahorro_estimado.toLocaleString()}</p><p class="text-[9px] text-zinc-500">Ahorro</p></div>
-                        </div>
-                    </div>`;
+                    let html = '<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 mb-3">' +
+                        '<div class="grid grid-cols-4 gap-2 text-center">' +
+                            '<div><p class="text-lg font-bold text-white">' + data.total_clientes + '</p><p class="text-[9px] text-zinc-500">Total</p></div>' +
+                            '<div><p class="text-lg font-bold text-rose-400">' + data.en_riesgo + '</p><p class="text-[9px] text-zinc-500">En Riesgo</p></div>' +
+                            '<div><p class="text-lg font-bold text-emerald-400">' + data.seguros + '</p><p class="text-[9px] text-zinc-500">Seguros</p></div>' +
+                            '<div><p class="text-lg font-bold text-gold-400">S/. ' + data.ahorro_estimado.toLocaleString() + '</p><p class="text-[9px] text-zinc-500">Ahorro</p></div>' +
+                        '</div></div>';
                     data.predicciones.forEach((p, i) => {
                         const c = getRiskColor(p.nivel_riesgo);
-                        html += `<div class="bg-dark-200 p-3 rounded-lg border border-zinc-800/30 mb-2 flex justify-between items-center">
-                            <span class="text-xs text-zinc-400">Cliente ${i+1}</span>
-                            <span class="text-xs font-bold text-${c}-400">${(p.probabilidad_desercion*100).toFixed(1)}% - ${p.nivel_riesgo}</span>
-                        </div>`;
+                        html += '<div class="bg-dark-200 p-3 rounded-lg border border-zinc-800/30 mb-2 flex justify-between items-center">' +
+                            '<span class="text-xs text-zinc-400">Cliente ' + (i+1) + '</span>' +
+                            '<span class="text-xs font-bold text-' + c + '-400">' + (p.probabilidad_desercion*100).toFixed(1) + '% - ' + p.nivel_riesgo + '</span></div>';
                     });
                     document.getElementById('lote-resultados').innerHTML = html;
                     document.getElementById('lote-resultados').classList.remove('hidden');
@@ -702,39 +705,78 @@ async def home():
             }
 
             let chartRiesgo, chartTendencia, chartFeatures;
-            function cargarDashboard() {
+
+            async function cargarDashboard() {
+                let datosHistorial = [];
+                try {
+                    const res = await fetch('/historial');
+                    const data = await res.json();
+                    datosHistorial = data.predicciones || [];
+                } catch(e) { console.error('Error cargando historial:', e); }
+
+                let statsData = { total_predicciones: 0, clientes_en_riesgo: 0, clientes_seguros: 0, tasa_riesgo: 0 };
+                try {
+                    const res = await fetch('/dashboard/stats');
+                    statsData = await res.json();
+                } catch(e) {}
+
+                const conteo = { 'BAJO': 0, 'MEDIO': 0, 'ALTO': 0, 'CRITICO': 0 };
+                datosHistorial.forEach(p => {
+                    const key = p.nivel_riesgo.replace('Í', 'I');
+                    if (conteo[key] !== undefined) conteo[key]++;
+                });
+
                 if (chartRiesgo) chartRiesgo.destroy();
                 if (chartTendencia) chartTendencia.destroy();
                 if (chartFeatures) chartFeatures.destroy();
 
                 chartRiesgo = new Chart(document.getElementById('chart-riesgo'), {
                     type: 'doughnut',
-                    data: { labels: ['Bajo', 'Medio', 'Alto', 'Crítico'], datasets: [{ data: [40, 25, 20, 15], backgroundColor: ['#10b981', '#eab308', '#f97316', '#f43f5e'], borderWidth: 0 }] },
+                    data: {
+                        labels: ['Bajo', 'Medio', 'Alto', 'Critico'],
+                        datasets: [{ data: [conteo.BAJO, conteo.MEDIO, conteo.ALTO, conteo.CRITICO], backgroundColor: ['#10b981', '#eab308', '#f97316', '#f43f5e'], borderWidth: 0 }]
+                    },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', font: { size: 10 } } } } }
                 });
 
+                const horas = {};
+                datosHistorial.forEach(p => {
+                    const h = new Date(p.timestamp).getHours() + ':00';
+                    horas[h] = (horas[h] || 0) + 1;
+                });
+                const horasSorted = Object.entries(horas).sort((a,b) => parseInt(a[0]) - parseInt(b[0]));
+                const labelsHoras = horasSorted.map(h => h[0]);
+                const dataHoras = horasSorted.map(h => h[1]);
+
                 chartTendencia = new Chart(document.getElementById('chart-tendencia'), {
                     type: 'line',
-                    data: { labels: ['9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm'], datasets: [{ label: 'Predicciones', data: [5, 12, 8, 15, 22, 18, 25, 30, 28], borderColor: '#d4af37', backgroundColor: 'rgba(212,175,55,0.1)', fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#d4af37' }] },
+                    data: {
+                        labels: labelsHoras.length ? labelsHoras : ['Sin datos'],
+                        datasets: [{ label: 'Predicciones', data: dataHoras.length ? dataHoras : [0], borderColor: '#d4af37', backgroundColor: 'rgba(212,175,55,0.1)', fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#d4af37' }]
+                    },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(63,63,70,0.3)' }, ticks: { color: '#71717a', font: { size: 9 } } }, y: { grid: { color: 'rgba(63,63,70,0.3)' }, ticks: { color: '#71717a', font: { size: 9 } } } } }
                 });
 
                 chartFeatures = new Chart(document.getElementById('chart-features'), {
                     type: 'bar',
-                    data: { labels: ['Asistencia', 'Consumo Barra', 'Antigüedad', 'Precio', 'Edad', 'Uso App', 'Género'], datasets: [{ label: 'Importancia', data: [0.28, 0.22, 0.18, 0.12, 0.10, 0.06, 0.04], backgroundColor: '#d4af37', borderRadius: 4 }] },
+                    data: { labels: ['Asistencia', 'Consumo Barra', 'Antiguedad', 'Precio', 'Edad', 'Uso App', 'Genero'], datasets: [{ label: 'Importancia', data: [0.28, 0.22, 0.18, 0.12, 0.10, 0.06, 0.04], backgroundColor: '#d4af37', borderRadius: 4 }] },
                     options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(63,63,70,0.3)' }, ticks: { color: '#71717a', font: { size: 9 } } }, y: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 10 } } } } }
                 });
 
                 const tbody = document.getElementById('tabla-historial');
-                tbody.innerHTML = historial.map(h => `
-                    <tr class="border-b border-zinc-800/20">
-                        <td class="py-2 text-zinc-400">${h.id}</td>
-                        <td class="py-2 font-bold ${h.alerta ? 'text-rose-400' : 'text-emerald-400'}">${h.prob}</td>
-                        <td class="py-2 text-zinc-300">${h.riesgo}</td>
-                        <td class="py-2">${h.alerta ? '<span class="text-rose-400">Si</span>' : '<span class="text-emerald-400">No</span>'}</td>
-                        <td class="py-2 text-zinc-500">${h.fecha}</td>
-                    </tr>`).join('');
+                tbody.innerHTML = datosHistorial.slice(0, 15).map(h => {
+                    const alerta = h.alerta_de_fuga;
+                    const color = alerta ? 'rose' : 'emerald';
+                    return '<tr class="border-b border-zinc-800/20">' +
+                        '<td class="py-2 text-zinc-400">' + h.id + '</td>' +
+                        '<td class="py-2 font-bold text-' + color + '-400">' + (h.probabilidad_desercion*100).toFixed(1) + '%</td>' +
+                        '<td class="py-2 text-zinc-300">' + h.nivel_riesgo + '</td>' +
+                        '<td class="py-2">' + (alerta ? '<span class="text-rose-400">Si</span>' : '<span class="text-emerald-400">No</span>') + '</td>' +
+                        '<td class="py-2 text-zinc-500">' + new Date(h.timestamp).toLocaleString('es-PE') + '</td></tr>';
+                }).join('');
             }
+
+            window.addEventListener('load', () => { cargarStatsDesdeAPI(); });
         </script>
     </body>
     </html>
