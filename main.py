@@ -173,6 +173,11 @@ async def home():
             @keyframes pulse-gold { 0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.4); } 50% { box-shadow: 0 0 0 10px rgba(212,175,55,0); } }
             .pulse-gold { animation: pulse-gold 2s infinite; }
             .chart-container { position: relative; height: 200px; }
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            @media (max-width: 640px) {
+                .chart-container { height: 180px; }
+            }
         </style>
     </head>
     <body class="bg-dark-700 text-white min-h-screen">
@@ -190,7 +195,7 @@ async def home():
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <nav class="hidden sm:flex gap-1">
+                    <nav class="flex gap-1 overflow-x-auto scrollbar-hide">
                         <button onclick="showSection('predictor')" class="nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20" data-section="predictor">
                             <i class="fa-solid fa-brain mr-1"></i> Predictor
                         </button>
@@ -790,6 +795,8 @@ async def home():
                 if (chartTendencia) chartTendencia.destroy();
                 if (chartFeatures) chartFeatures.destroy();
 
+                requestAnimationFrame(() => {
+
                 chartRiesgo = new Chart(document.getElementById('chart-riesgo'), {
                     type: 'doughnut',
                     data: {
@@ -834,6 +841,8 @@ async def home():
                         '<td class="py-2">' + (alerta ? '<span class="text-rose-400">Si</span>' : '<span class="text-emerald-400">No</span>') + '</td>' +
                         '<td class="py-2 text-zinc-500">' + new Date(h.timestamp).toLocaleString('es-PE') + '</td></tr>';
                 }).join('');
+
+                }); // end requestAnimationFrame
             }
 
             async function cargarInformes() {
