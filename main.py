@@ -177,6 +177,12 @@ async def home():
             .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
             @media (max-width: 640px) {
                 .chart-container { height: 180px; }
+                .mobile-menu { display: none; }
+                .mobile-menu.open { display: flex; }
+            }
+            @media (min-width: 641px) {
+                .mobile-menu { display: none !important; }
+                .btn-hamburger { display: none !important; }
             }
         </style>
     </head>
@@ -195,7 +201,7 @@ async def home():
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <nav class="flex gap-1 overflow-x-auto scrollbar-hide">
+                    <nav class="hidden sm:flex gap-1">
                         <button onclick="showSection('predictor')" class="nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20" data-section="predictor">
                             <i class="fa-solid fa-brain mr-1"></i> Predictor
                         </button>
@@ -212,6 +218,9 @@ async def home():
                             <i class="fa-solid fa-file-lines mr-1"></i> Reportes
                         </button>
                     </nav>
+                    <button onclick="toggleMobileMenu()" class="btn-hamburger bg-zinc-800 hover:bg-zinc-700 text-zinc-300 p-2 rounded-lg border border-zinc-700/50">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
                     <a href="/docs" target="_blank" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs px-3 py-1.5 rounded-lg border border-zinc-700/50 transition-all">
                         <i class="fa-solid fa-book mr-1"></i> API
                     </a>
@@ -219,6 +228,23 @@ async def home():
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span> Live
                     </span>
                 </div>
+            </div>
+            <div id="mobile-menu" class="mobile-menu max-w-7xl mx-auto px-4 pb-3 flex-col gap-2">
+                <button onclick="showSection('predictor'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20" data-section-mobile="predictor">
+                    <i class="fa-solid fa-brain mr-2"></i> Predictor
+                </button>
+                <button onclick="showSection('dashboard'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="dashboard">
+                    <i class="fa-solid fa-chart-pie mr-2"></i> Dashboard
+                </button>
+                <button onclick="showSection('roi'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="roi">
+                    <i class="fa-solid fa-calculator mr-2"></i> ROI
+                </button>
+                <button onclick="showSection('lote'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="lote">
+                    <i class="fa-solid fa-layer-group mr-2"></i> Lote
+                </button>
+                <button onclick="showSection('reportes'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="reportes">
+                    <i class="fa-solid fa-file-lines mr-2"></i> Reportes
+                </button>
             </div>
         </header>
 
@@ -588,14 +614,26 @@ async def home():
                 document.getElementById('stat-ahorro').textContent = 'S/. ' + statsLocal.ahorro.toLocaleString();
             }
 
+            function toggleMobileMenu() {
+                const menu = document.getElementById('mobile-menu');
+                menu.classList.toggle('open');
+            }
+
             function showSection(name) {
                 document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
                 document.getElementById('sec-' + name).classList.remove('hidden');
                 document.querySelectorAll('.nav-btn').forEach(b => {
                     b.className = 'nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all';
                 });
-                document.querySelector(`[data-section="${name}"]`).className = 'nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20';
+                document.querySelectorAll('.nav-btn-mobile').forEach(b => {
+                    b.className = 'nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all';
+                });
+                const desktopBtn = document.querySelector(`[data-section="${name}"]`);
+                if (desktopBtn) desktopBtn.className = 'nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20';
+                const mobileBtn = document.querySelector(`[data-section-mobile="${name}"]`);
+                if (mobileBtn) mobileBtn.className = 'nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20';
                 if (name === 'dashboard') cargarDashboard();
+                if (name === 'reportes') cargarInformes();
             }
 
             function cargarDemo() {
