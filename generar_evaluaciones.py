@@ -1,5 +1,6 @@
 """
-Generador de 50 evaluaciones ficticias para el Dashboard
+Generador de 600 evaluaciones ficticias para el Dashboard
+Mitad de la capacidad de entrenamiento del modelo IA
 """
 import json
 import random
@@ -31,7 +32,7 @@ def generar_predicciones():
     historial = []
     ahora = datetime.now()
 
-    for i in range(50):
+    for i in range(600):
         nivel = random.choices(
             list(NIVELES.keys()),
             weights=[NIVELES[n]["peso"] for n in NIVELES]
