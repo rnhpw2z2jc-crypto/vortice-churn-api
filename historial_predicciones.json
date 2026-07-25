@@ -1,10 +1,952 @@
 [
   {
-    "id": "PRD-20260724211616",
-    "probabilidad_desercion": 0.39,
+    "id": "PRD-20260724982554",
+    "probabilidad_desercion": 0.088,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-24T01:30:53.391859",
+    "cliente_demo": {
+      "edad": 62,
+      "antiguedad_meses": 5,
+      "precio_membresia": 990.0,
+      "asistencia_semanal": 1.5,
+      "consumo_barra": 80,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260724900581",
+    "probabilidad_desercion": 0.4538,
     "alerta_de_fuga": false,
     "nivel_riesgo": "MEDIO",
     "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
-    "timestamp": "2026-07-24T21:16:16.577337"
+    "timestamp": "2026-07-24T00:35:53.391859",
+    "cliente_demo": {
+      "edad": 26,
+      "antiguedad_meses": 30,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 3.0,
+      "consumo_barra": 40,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260723662336",
+    "probabilidad_desercion": 0.6228,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "ALTO",
+    "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+    "timestamp": "2026-07-23T06:40:53.391859",
+    "cliente_demo": {
+      "edad": 37,
+      "antiguedad_meses": 36,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 1.0,
+      "consumo_barra": 30,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260723500156",
+    "probabilidad_desercion": 0.3173,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-23T00:19:53.391859",
+    "cliente_demo": {
+      "edad": 25,
+      "antiguedad_meses": 24,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 5.5,
+      "consumo_barra": 60,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260722354801",
+    "probabilidad_desercion": 0.8891,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-07-22T05:11:53.391859",
+    "cliente_demo": {
+      "edad": 33,
+      "antiguedad_meses": 24,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 2.0,
+      "consumo_barra": 80,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260721496922",
+    "probabilidad_desercion": 0.0723,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-21T07:32:53.391859",
+    "cliente_demo": {
+      "edad": 38,
+      "antiguedad_meses": 18,
+      "precio_membresia": 290.0,
+      "asistencia_semanal": 0.5,
+      "consumo_barra": 150,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260720674553",
+    "probabilidad_desercion": 0.3562,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-20T10:00:53.391859",
+    "cliente_demo": {
+      "edad": 58,
+      "antiguedad_meses": 8,
+      "precio_membresia": 1000.0,
+      "asistencia_semanal": 6.0,
+      "consumo_barra": 20,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260720120422",
+    "probabilidad_desercion": 0.4157,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-20T07:38:53.391859",
+    "cliente_demo": {
+      "edad": 26,
+      "antiguedad_meses": 12,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 4.5,
+      "consumo_barra": 0,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260719707040",
+    "probabilidad_desercion": 0.7176,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-07-19T11:48:53.391859",
+    "cliente_demo": {
+      "edad": 20,
+      "antiguedad_meses": 24,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 2.0,
+      "consumo_barra": 60,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260719102260",
+    "probabilidad_desercion": 0.8867,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-07-19T06:55:53.391859",
+    "cliente_demo": {
+      "edad": 46,
+      "antiguedad_meses": 4,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 3.5,
+      "consumo_barra": 0,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260719735656",
+    "probabilidad_desercion": 0.2829,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-19T04:10:53.391859",
+    "cliente_demo": {
+      "edad": 18,
+      "antiguedad_meses": 2,
+      "precio_membresia": 990.0,
+      "asistencia_semanal": 3.5,
+      "consumo_barra": 50,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260719824586",
+    "probabilidad_desercion": 0.2852,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-19T01:58:53.391859",
+    "cliente_demo": {
+      "edad": 51,
+      "antiguedad_meses": 30,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 4.5,
+      "consumo_barra": 0,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260718806073",
+    "probabilidad_desercion": 0.6534,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "ALTO",
+    "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+    "timestamp": "2026-07-18T12:20:53.391859",
+    "cliente_demo": {
+      "edad": 58,
+      "antiguedad_meses": 8,
+      "precio_membresia": 290.0,
+      "asistencia_semanal": 3.5,
+      "consumo_barra": 60,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260718808446",
+    "probabilidad_desercion": 0.5577,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "ALTO",
+    "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+    "timestamp": "2026-07-18T06:36:53.391859",
+    "cliente_demo": {
+      "edad": 53,
+      "antiguedad_meses": 18,
+      "precio_membresia": 1000.0,
+      "asistencia_semanal": 3.0,
+      "consumo_barra": 75,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260718916232",
+    "probabilidad_desercion": 0.4197,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-18T01:42:53.391859",
+    "cliente_demo": {
+      "edad": 40,
+      "antiguedad_meses": 10,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 2.0,
+      "consumo_barra": 20,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260717472528",
+    "probabilidad_desercion": 0.0692,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-17T00:20:53.391859",
+    "cliente_demo": {
+      "edad": 40,
+      "antiguedad_meses": 5,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 5.5,
+      "consumo_barra": 50,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260716133326",
+    "probabilidad_desercion": 0.3048,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-16T10:12:53.391859",
+    "cliente_demo": {
+      "edad": 24,
+      "antiguedad_meses": 30,
+      "precio_membresia": 110.0,
+      "asistencia_semanal": 5.5,
+      "consumo_barra": 150,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260716840734",
+    "probabilidad_desercion": 0.1186,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-16T08:06:53.391859",
+    "cliente_demo": {
+      "edad": 50,
+      "antiguedad_meses": 2,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 1.5,
+      "consumo_barra": 30,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260716197793",
+    "probabilidad_desercion": 0.3802,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-16T06:11:53.391859",
+    "cliente_demo": {
+      "edad": 20,
+      "antiguedad_meses": 10,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 4.5,
+      "consumo_barra": 10,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260716216970",
+    "probabilidad_desercion": 0.3889,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-16T04:31:53.391859",
+    "cliente_demo": {
+      "edad": 16,
+      "antiguedad_meses": 24,
+      "precio_membresia": 1000.0,
+      "asistencia_semanal": 1.0,
+      "consumo_barra": 120,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260716561239",
+    "probabilidad_desercion": 0.5902,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "ALTO",
+    "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+    "timestamp": "2026-07-16T01:11:53.391859",
+    "cliente_demo": {
+      "edad": 56,
+      "antiguedad_meses": 5,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 4.5,
+      "consumo_barra": 75,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260715577538",
+    "probabilidad_desercion": 0.7517,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-07-15T09:35:53.391859",
+    "cliente_demo": {
+      "edad": 28,
+      "antiguedad_meses": 3,
+      "precio_membresia": 110.0,
+      "asistencia_semanal": 0.5,
+      "consumo_barra": 30,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260715663750",
+    "probabilidad_desercion": 0.2112,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-15T06:06:53.391859",
+    "cliente_demo": {
+      "edad": 64,
+      "antiguedad_meses": 60,
+      "precio_membresia": 110.0,
+      "asistencia_semanal": 0.5,
+      "consumo_barra": 75,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260714128941",
+    "probabilidad_desercion": 0.0964,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-14T08:31:53.391859",
+    "cliente_demo": {
+      "edad": 20,
+      "antiguedad_meses": 36,
+      "precio_membresia": 290.0,
+      "asistencia_semanal": 3.0,
+      "consumo_barra": 120,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260714442027",
+    "probabilidad_desercion": 0.2094,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-14T04:06:53.391859",
+    "cliente_demo": {
+      "edad": 58,
+      "antiguedad_meses": 48,
+      "precio_membresia": 110.0,
+      "asistencia_semanal": 6.0,
+      "consumo_barra": 40,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260713348237",
+    "probabilidad_desercion": 0.7088,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-07-13T09:43:53.391859",
+    "cliente_demo": {
+      "edad": 31,
+      "antiguedad_meses": 24,
+      "precio_membresia": 110.0,
+      "asistencia_semanal": 3.0,
+      "consumo_barra": 80,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260712333752",
+    "probabilidad_desercion": 0.2183,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-12T00:24:53.391859",
+    "cliente_demo": {
+      "edad": 46,
+      "antiguedad_meses": 4,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 4.0,
+      "consumo_barra": 50,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260711378517",
+    "probabilidad_desercion": 0.4177,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-11T02:49:53.391859",
+    "cliente_demo": {
+      "edad": 52,
+      "antiguedad_meses": 12,
+      "precio_membresia": 290.0,
+      "asistencia_semanal": 2.5,
+      "consumo_barra": 30,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260708571029",
+    "probabilidad_desercion": 0.1025,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-08T04:25:53.391859",
+    "cliente_demo": {
+      "edad": 51,
+      "antiguedad_meses": 4,
+      "precio_membresia": 1000.0,
+      "asistencia_semanal": 5.5,
+      "consumo_barra": 150,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260707629959",
+    "probabilidad_desercion": 0.0757,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-07T11:09:53.391859",
+    "cliente_demo": {
+      "edad": 34,
+      "antiguedad_meses": 18,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 6.0,
+      "consumo_barra": 50,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260707245051",
+    "probabilidad_desercion": 0.1092,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-07T05:10:53.391859",
+    "cliente_demo": {
+      "edad": 63,
+      "antiguedad_meses": 18,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 5.0,
+      "consumo_barra": 60,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260707266889",
+    "probabilidad_desercion": 0.4009,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-07T04:06:53.391859",
+    "cliente_demo": {
+      "edad": 64,
+      "antiguedad_meses": 60,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 5.0,
+      "consumo_barra": 150,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260706170674",
+    "probabilidad_desercion": 0.1311,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-06T05:12:53.391859",
+    "cliente_demo": {
+      "edad": 53,
+      "antiguedad_meses": 4,
+      "precio_membresia": 110.0,
+      "asistencia_semanal": 1.0,
+      "consumo_barra": 150,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260706159642",
+    "probabilidad_desercion": 0.2825,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-06T01:52:53.391859",
+    "cliente_demo": {
+      "edad": 19,
+      "antiguedad_meses": 30,
+      "precio_membresia": 290.0,
+      "asistencia_semanal": 0.5,
+      "consumo_barra": 0,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260704910620",
+    "probabilidad_desercion": 0.1204,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-04T03:30:53.391859",
+    "cliente_demo": {
+      "edad": 39,
+      "antiguedad_meses": 18,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 6.0,
+      "consumo_barra": 10,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260704520651",
+    "probabilidad_desercion": 0.2875,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-07-04T01:51:53.391859",
+    "cliente_demo": {
+      "edad": 30,
+      "antiguedad_meses": 24,
+      "precio_membresia": 290.0,
+      "asistencia_semanal": 0.5,
+      "consumo_barra": 30,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260702359947",
+    "probabilidad_desercion": 0.6311,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "ALTO",
+    "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+    "timestamp": "2026-07-02T09:01:53.391859",
+    "cliente_demo": {
+      "edad": 58,
+      "antiguedad_meses": 24,
+      "precio_membresia": 290.0,
+      "asistencia_semanal": 4.0,
+      "consumo_barra": 80,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260630665492",
+    "probabilidad_desercion": 0.2325,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-06-30T11:18:53.391859",
+    "cliente_demo": {
+      "edad": 58,
+      "antiguedad_meses": 10,
+      "precio_membresia": 990.0,
+      "asistencia_semanal": 1.5,
+      "consumo_barra": 40,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260629379766",
+    "probabilidad_desercion": 0.9148,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-06-29T10:30:53.391859",
+    "cliente_demo": {
+      "edad": 42,
+      "antiguedad_meses": 1,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 6.0,
+      "consumo_barra": 50,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260629377312",
+    "probabilidad_desercion": 0.3575,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-06-29T02:53:53.391859",
+    "cliente_demo": {
+      "edad": 16,
+      "antiguedad_meses": 24,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 4.5,
+      "consumo_barra": 40,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260629299122",
+    "probabilidad_desercion": 0.7583,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-06-29T00:57:53.391859",
+    "cliente_demo": {
+      "edad": 34,
+      "antiguedad_meses": 8,
+      "precio_membresia": 1000.0,
+      "asistencia_semanal": 6.0,
+      "consumo_barra": 80,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260628934794",
+    "probabilidad_desercion": 0.82,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-06-28T07:49:53.391859",
+    "cliente_demo": {
+      "edad": 51,
+      "antiguedad_meses": 3,
+      "precio_membresia": 320.0,
+      "asistencia_semanal": 1.5,
+      "consumo_barra": 0,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 1
+    }
+  },
+  {
+    "id": "PRD-20260628955662",
+    "probabilidad_desercion": 0.1371,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-06-28T01:07:53.391859",
+    "cliente_demo": {
+      "edad": 31,
+      "antiguedad_meses": 1,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 5.0,
+      "consumo_barra": 10,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260627908577",
+    "probabilidad_desercion": 0.472,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-06-27T13:21:53.391859",
+    "cliente_demo": {
+      "edad": 56,
+      "antiguedad_meses": 8,
+      "precio_membresia": 1100.0,
+      "asistencia_semanal": 2.5,
+      "consumo_barra": 0,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260626552248",
+    "probabilidad_desercion": 0.7254,
+    "alerta_de_fuga": true,
+    "nivel_riesgo": "CRÍTICO",
+    "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+    "timestamp": "2026-06-26T04:14:53.391859",
+    "cliente_demo": {
+      "edad": 32,
+      "antiguedad_meses": 1,
+      "precio_membresia": 1000.0,
+      "asistencia_semanal": 3.5,
+      "consumo_barra": 0,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260626958179",
+    "probabilidad_desercion": 0.1636,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-06-26T00:39:53.391859",
+    "cliente_demo": {
+      "edad": 26,
+      "antiguedad_meses": 24,
+      "precio_membresia": 110.0,
+      "asistencia_semanal": 2.5,
+      "consumo_barra": 80,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260625974244",
+    "probabilidad_desercion": 0.1136,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-06-25T07:30:53.391859",
+    "cliente_demo": {
+      "edad": 20,
+      "antiguedad_meses": 60,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 3.0,
+      "consumo_barra": 40,
+      "uso_app": 0,
+      "genero_masculino": 1,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260625584714",
+    "probabilidad_desercion": 0.1141,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-06-25T02:45:53.391859",
+    "cliente_demo": {
+      "edad": 20,
+      "antiguedad_meses": 18,
+      "precio_membresia": 1000.0,
+      "asistencia_semanal": 1.5,
+      "consumo_barra": 80,
+      "uso_app": 0,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260624249811",
+    "probabilidad_desercion": 0.1006,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "BAJO",
+    "recomendacion": "Socio estable. Invitar a programas de referidos o retos internos.",
+    "timestamp": "2026-06-24T03:30:53.391859",
+    "cliente_demo": {
+      "edad": 61,
+      "antiguedad_meses": 6,
+      "precio_membresia": 120.0,
+      "asistencia_semanal": 5.5,
+      "consumo_barra": 75,
+      "uso_app": 1,
+      "genero_masculino": 1,
+      "membresia_mensual": 1,
+      "membresia_trimestral": 0
+    }
+  },
+  {
+    "id": "PRD-20260624940346",
+    "probabilidad_desercion": 0.3334,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-06-24T01:53:53.391859",
+    "cliente_demo": {
+      "edad": 45,
+      "antiguedad_meses": 1,
+      "precio_membresia": 990.0,
+      "asistencia_semanal": 2.0,
+      "consumo_barra": 10,
+      "uso_app": 1,
+      "genero_masculino": 0,
+      "membresia_mensual": 0,
+      "membresia_trimestral": 0
+    }
   }
 ]
