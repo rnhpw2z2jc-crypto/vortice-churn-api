@@ -1,0 +1,10 @@
+[
+  {
+    "id": "PRD-20260724211616",
+    "probabilidad_desercion": 0.39,
+    "alerta_de_fuga": false,
+    "nivel_riesgo": "MEDIO",
+    "recomendacion": "Enviar comunicación de bienvenida y ofrecer clase gratuita o servicio adicional.",
+    "timestamp": "2026-07-24T21:16:16.577337"
+  }
+]
