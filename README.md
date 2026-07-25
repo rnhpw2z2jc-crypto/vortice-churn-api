@@ -171,7 +171,7 @@ Esto creará `vortice_churn_data.csv` con 1,200 registros.
 
 **Ingeniería de Datos - Proyecto Vórtice S.A.C.**
 VII Ciclo - Escuela de Ingeniería de Sistemas
-Universidad Católica de los Ángeles (UCV)
+Universidad Cesar Vallejo (UCV)
 
 ---
 
