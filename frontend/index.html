@@ -291,11 +291,48 @@
                     </h3>
                     <div class="chart-container"><canvas id="chart-tendencia"></canvas></div>
                 </div>
+                <div class="bg-dark-400 p-5 rounded-2xl border border-zinc-800/40">
+                    <h3 class="text-sm font-bold text-zinc-100 mb-4 flex items-center">
+                        <i class="fa-solid fa-chart-column text-gold-400 mr-2"></i> Socios por Membresía
+                    </h3>
+                    <div class="chart-container"><canvas id="chart-membresia"></canvas></div>
+                </div>
+                <div class="bg-dark-400 p-5 rounded-2xl border border-zinc-800/40 lg:col-span-2">
+                    <h3 class="text-sm font-bold text-zinc-100 mb-4 flex items-center">
+                        <i class="fa-solid fa-calendar-week text-gold-400 mr-2"></i> Tendencia Semanal de Deserción
+                    </h3>
+                    <div class="chart-container"><canvas id="chart-semana"></canvas></div>
+                </div>
                 <div class="bg-dark-400 p-5 rounded-2xl border border-zinc-800/40 lg:col-span-2">
                     <h3 class="text-sm font-bold text-zinc-100 mb-4 flex items-center">
                         <i class="fa-solid fa-chart-bar text-gold-400 mr-2"></i> Feature Importance
                     </h3>
                     <div class="chart-container"><canvas id="chart-features"></canvas></div>
+                </div>
+                <div class="bg-dark-400 p-5 rounded-2xl border border-zinc-800/40 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold text-zinc-100 flex items-center">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400 mr-2"></i> Top 10 Socios en Riesgo
+                        </h3>
+                        <button onclick="exportarCSV()" class="bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 text-gold-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">
+                            <i class="fa-solid fa-file-csv mr-1"></i> Exportar CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b border-zinc-800/40">
+                                    <th class="text-left py-2 text-zinc-500 font-semibold">#</th>
+                                    <th class="text-left py-2 text-zinc-500 font-semibold">ID</th>
+                                    <th class="text-left py-2 text-zinc-500 font-semibold">Probabilidad</th>
+                                    <th class="text-left py-2 text-zinc-500 font-semibold">Riesgo</th>
+                                    <th class="text-left py-2 text-zinc-500 font-semibold">Recomendación</th>
+                                    <th class="text-left py-2 text-zinc-500 font-semibold">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-top-riesgo"></tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="bg-dark-400 p-5 rounded-2xl border border-zinc-800/40 lg:col-span-2">
                     <h3 class="text-sm font-bold text-zinc-100 mb-3 flex items-center">
@@ -348,6 +385,40 @@
                     <div class="text-center text-zinc-500">
                         <i class="fa-solid fa-coins text-4xl mb-3 opacity-30"></i>
                         <p class="text-sm">Ingresa los datos y calcula el retorno de inversión</p>
+                    </div>
+                </div>
+                <div class="bg-dark-400 p-6 rounded-2xl border border-zinc-800/40 lg:col-span-2">
+                    <h3 class="text-sm font-bold text-zinc-100 mb-2 flex items-center">
+                        <i class="fa-solid fa-sliders text-gold-400 mr-2"></i> Simulador de Retención
+                    </h3>
+                    <p class="text-xs text-zinc-500 mb-5">Mueve el control para ver cuánto ahorraría tu empresa al retener un porcentaje de los socios en riesgo. <b class="text-gold-400">Base: 600 socios · S/. 1,800 LTV</b></p>
+                    <div class="bg-dark-200 p-5 rounded-xl border border-zinc-800/30">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">% de Socios en Riesgo Retenidos</span>
+                            <span class="text-2xl font-black text-gold-400" id="sim-pct">50%</span>
+                        </div>
+                        <input type="range" id="sim-slider" min="0" max="100" value="50" oninput="actualizarSimulador()" class="w-full accent-gold-400">
+                        <div class="flex justify-between text-[9px] text-zinc-600 mt-1">
+                            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30 text-center">
+                            <p class="text-lg font-black text-white" id="sim-retenidos">112</p>
+                            <p class="text-[9px] text-zinc-500 uppercase">Socios Retenidos</p>
+                        </div>
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30 text-center">
+                            <p class="text-lg font-black text-emerald-400" id="sim-ahorro">S/. 201,600</p>
+                            <p class="text-[9px] text-zinc-500 uppercase">Ingresos Salvados</p>
+                        </div>
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30 text-center">
+                            <p class="text-lg font-black text-rose-400" id="sim-perdida">S/. 201,600</p>
+                            <p class="text-[9px] text-zinc-500 uppercase">Pérdida Restante</p>
+                        </div>
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30 text-center">
+                            <p class="text-lg font-black text-gold-400" id="sim-net">S/. 0</p>
+                            <p class="text-[9px] text-zinc-500 uppercase">Impacto Neto</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -640,6 +711,22 @@
             '</div>';
         });
 
+        function actualizarSimulador() {
+            const pct = parseInt(document.getElementById('sim-slider').value);
+            document.getElementById('sim-pct').textContent = pct + '%';
+            const enRiesgo = 224;
+            const ltv = 1800;
+            const retenidos = Math.round(enRiesgo * pct / 100);
+            const ahorro = retenidos * ltv;
+            const perdida = (enRiesgo - retenidos) * ltv;
+            const neto = ahorro - perdida;
+            document.getElementById('sim-retenidos').textContent = retenidos;
+            document.getElementById('sim-ahorro').textContent = 'S/. ' + ahorro.toLocaleString();
+            document.getElementById('sim-perdida').textContent = 'S/. ' + perdida.toLocaleString();
+            document.getElementById('sim-net').textContent = 'S/. ' + (neto > 0 ? '+' : '') + neto.toLocaleString();
+            document.getElementById('sim-net').className = 'text-lg font-black ' + (neto >= 0 ? 'text-emerald-400' : 'text-rose-400');
+        }
+
         async function procesarLote() {
             try {
                 const clientes = JSON.parse(document.getElementById('lote-input').value);
@@ -663,7 +750,7 @@
             } catch (err) { alert('Error en JSON: ' + err.message); }
         }
 
-        let chartRiesgo, chartTendencia, chartFeatures;
+        let chartRiesgo, chartTendencia, chartSemana, chartMembresia, chartFeatures;
 
         async function cargarDashboard() {
             let datosHistorial = [];
@@ -687,6 +774,8 @@
 
             if (chartRiesgo) chartRiesgo.destroy();
             if (chartTendencia) chartTendencia.destroy();
+            if (chartSemana) chartSemana.destroy();
+            if (chartMembresia) chartMembresia.destroy();
             if (chartFeatures) chartFeatures.destroy();
 
             requestAnimationFrame(() => {
@@ -724,6 +813,68 @@
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(63,63,70,0.3)' }, ticks: { color: '#71717a', font: { size: 9 } } }, y: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 10 } } } } }
             });
 
+            const semanas = {};
+            datosHistorial.forEach(p => {
+                const d = new Date(p.timestamp);
+                const sem = d.getFullYear() + '-S' + Math.ceil((d.getDate() + new Date(d.getFullYear(), d.getMonth(), 1).getDay()) / 7);
+                if (!semanas[sem]) semanas[sem] = { total: 0, riesgo: 0 };
+                semanas[sem].total++;
+                if (p.alerta_de_fuga) semanas[sem].riesgo++;
+            });
+            const semKeys = Object.keys(semanas).sort();
+            const semTasa = semKeys.map(k => {
+                const s = semanas[k];
+                return Math.round(s.riesgo / s.total * 100);
+            });
+
+            chartSemana = new Chart(document.getElementById('chart-semana'), {
+                type: 'line',
+                data: {
+                    labels: semKeys.length ? semKeys : ['Sin datos'],
+                    datasets: [{
+                        label: 'Tasa Deserción %',
+                        data: semTasa.length ? semTasa : [0],
+                        borderColor: '#f43f5e',
+                        backgroundColor: 'rgba(244,63,94,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f43f5e'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a1a1aa', font: { size: 10 } } } }, scales: { x: { grid: { color: 'rgba(63,63,70,0.3)' }, ticks: { color: '#71717a', font: { size: 9 } } }, y: { grid: { color: 'rgba(63,63,70,0.3)' }, ticks: { color: '#71717a', font: { size: 9 }, callback: v => v + '%' } } } }
+            });
+
+            const membresia = { 'Mensual': 0, 'Trimestral': 0, 'Anual': 0 };
+            datosHistorial.forEach(p => {
+                const cd = p.cliente_demo || {};
+                if (cd.membresia_mensual) membresia['Mensual']++;
+                else if (cd.membresia_trimestral) membresia['Trimestral']++;
+                else membresia['Anual']++;
+            });
+
+            chartMembresia = new Chart(document.getElementById('chart-membresia'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Mensual', 'Trimestral', 'Anual'],
+                    datasets: [{ data: [membresia.Mensual, membresia.Trimestral, membresia.Anual], backgroundColor: ['#d4af37', '#3b82f6', '#a855f7'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', font: { size: 10 } } } } }
+            });
+
+            const topRiesgo = datosHistorial.filter(p => p.alerta_de_fuga).sort((a,b) => b.probabilidad_desercion - a.probabilidad_desercion).slice(0, 10);
+            const tbodyTop = document.getElementById('tabla-top-riesgo');
+            tbodyTop.innerHTML = topRiesgo.map((p, i) => {
+                const color = p.probabilidad_desercion > 0.7 ? 'rose' : 'orange';
+                return '<tr class="border-b border-zinc-800/20">' +
+                    '<td class="py-2 text-zinc-600 font-bold">' + (i+1) + '</td>' +
+                    '<td class="py-2 text-zinc-400">' + p.id + '</td>' +
+                    '<td class="py-2 font-bold text-' + color + '-400">' + (p.probabilidad_desercion*100).toFixed(1) + '%</td>' +
+                    '<td class="py-2"><span class="text-[9px] font-bold bg-' + color + '-500/20 text-' + color + '-400 px-2 py-0.5 rounded-full">' + p.nivel_riesgo + '</span></td>' +
+                    '<td class="py-2 text-zinc-400 max-w-[200px] truncate">' + (p.recomendacion || '-') + '</td>' +
+                    '<td class="py-2 text-zinc-500">' + new Date(p.timestamp).toLocaleDateString('es-PE') + '</td></tr>';
+            }).join('');
+
             const tbody = document.getElementById('tabla-historial');
             tbody.innerHTML = datosHistorial.slice(0, 15).map(h => {
                 const alerta = h.alerta_de_fuga;
@@ -737,6 +888,25 @@
             }).join('');
 
             }); // end requestAnimationFrame
+        }
+
+        async function exportarCSV() {
+            try {
+                const res = await fetch(API_BASE + '/historial');
+                const data = await res.json();
+                const enRiesgo = (data.predicciones || []).filter(p => p.alerta_de_fuga).sort((a,b) => b.probabilidad_desercion - a.probabilidad_desercion);
+                const header = 'ID,Probabilidad,Riesgo,Recomendacion,Fecha';
+                const rows = enRiesgo.slice(0, 50).map(p => {
+                    const fecha = new Date(p.timestamp).toLocaleString('es-PE');
+                    return [p.id, (p.probabilidad_desercion*100).toFixed(2) + '%', p.nivel_riesgo, (p.recomendacion||'').replace(/,/g,';'), fecha].join(',');
+                }).join('\n');
+                const blob = new Blob([header + '\n' + rows], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'socios_en_riesgo.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch(e) { alert('Error exportando: ' + e.message); }
         }
 
         async function cargarInformes() {
@@ -868,7 +1038,13 @@
             document.getElementById('detalle-informe').classList.add('hidden');
         }
 
-        window.addEventListener('load', () => { cargarStatsDesdeAPI(); });
+        window.addEventListener('load', () => {
+            cargarStatsDesdeAPI();
+            setInterval(() => {
+                const sec = document.getElementById('sec-dashboard');
+                if (!sec.classList.contains('hidden')) cargarDashboard();
+            }, 30000);
+        });
     </script>
 </body>
 </html>
