@@ -72,6 +72,9 @@
                     <button onclick="showSection('reportes')" class="nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section="reportes">
                         <i class="fa-solid fa-file-lines mr-1"></i> Reportes
                     </button>
+                    <button onclick="showSection('modelo')" class="nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section="modelo">
+                        <i class="fa-solid fa-arrows-rotate mr-1"></i> Modelo
+                    </button>
                 </nav>
                 <button onclick="toggleMobileMenu()" class="btn-hamburger bg-zinc-800 hover:bg-zinc-700 text-zinc-300 p-2 rounded-lg border border-zinc-700/50">
                     <i class="fa-solid fa-bars text-sm"></i>
@@ -99,6 +102,9 @@
             </button>
             <button onclick="showSection('reportes'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="reportes">
                 <i class="fa-solid fa-file-lines mr-2"></i> Reportes
+            </button>
+            <button onclick="showSection('modelo'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="modelo">
+                <i class="fa-solid fa-arrows-rotate mr-2"></i> Modelo
             </button>
         </div>
     </header>
@@ -503,6 +509,114 @@
                 <div id="detalle-contenido"></div>
             </div>
         </section>
+
+        <!-- Seccion Aprendizaje Continuo -->
+        <section id="sec-modelo" class="hidden">
+            <div class="mb-6">
+                <h2 class="text-xl font-black text-white">Aprendizaje Continuo del Modelo</h2>
+                <p class="text-xs text-zinc-500 mt-1">Monitoreo de data drift, registro de resultados reales y reentrenamiento automático para mantener la precisión de la IA.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Estado del Modelo -->
+                <div class="bg-dark-400 p-6 rounded-2xl border border-zinc-800/40">
+                    <h3 class="text-sm font-bold text-zinc-100 mb-4 flex items-center">
+                        <i class="fa-solid fa-microchip text-gold-400 mr-2"></i> Estado del Modelo
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-zinc-500">Versión</span>
+                            <span class="font-bold text-gold-400" id="mod-version">1.0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-zinc-500">Entrenamiento original</span>
+                            <span class="font-bold text-zinc-200" id="mod-fecha-entrenamiento">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-zinc-500">Último reentrenamiento</span>
+                            <span class="font-bold text-zinc-200" id="mod-fecha-retrain">Nunca</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-zinc-500">Muestras acumuladas</span>
+                            <span class="font-bold text-zinc-200" id="mod-muestras">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-zinc-500">Drift detectado</span>
+                            <span class="font-bold" id="mod-drift-badge">-</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 rounded-xl bg-dark-200 border border-zinc-800/30">
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 font-bold">Métricas del modelo</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><p class="text-lg font-black text-gold-400" id="mod-acc">0.85</p><p class="text-[9px] text-zinc-500">Accuracy</p></div>
+                            <div><p class="text-lg font-black text-gold-400" id="mod-prec">0.82</p><p class="text-[9px] text-zinc-500">Precision</p></div>
+                            <div><p class="text-lg font-black text-gold-400" id="mod-rec">0.78</p><p class="text-[9px] text-zinc-500">Recall</p></div>
+                            <div><p class="text-lg font-black text-gold-400" id="mod-auc">0.88</p><p class="text-[9px] text-zinc-500">AUC-ROC</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monitoreo de Data Drift -->
+                <div class="bg-dark-400 p-6 rounded-2xl border border-zinc-800/40">
+                    <h3 class="text-sm font-bold text-zinc-100 mb-1 flex items-center">
+                        <i class="fa-solid fa-arrow-trend-up text-gold-400 mr-2"></i> Monitoreo de Data Drift
+                    </h3>
+                    <div id="drift-estado" class="text-xs text-zinc-500 mb-3">Analizando distribución de datos...</div>
+                    <div id="drift-table" class="max-h-48 overflow-y-auto scrollbar-hide space-y-1.5">
+                        <div class="text-center text-zinc-500 py-6">
+                            <i class="fa-solid fa-wave-square text-2xl mb-2 opacity-30"></i>
+                            <p class="text-xs">Cargando monitoreo...</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Simular nuevo segmento de clientes</p>
+                        <div class="grid grid-cols-3 gap-2 mb-3">
+                            <button onclick="simularDrift('digital')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] py-2 rounded-lg border border-zinc-700/50 transition-all">Digital</button>
+                            <button onclick="simularDrift('premium')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] py-2 rounded-lg border border-zinc-700/50 transition-all">Premium</button>
+                            <button onclick="simularDrift('adulto')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] py-2 rounded-lg border border-zinc-700/50 transition-all">Adulto</button>
+                        </div>
+                        <p class="text-[9px] text-zinc-600 mb-3">Simulación what-if sin modificar los datos reales del dashboard.</p>
+                        <button onclick="cargarDrift()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs py-2 rounded-lg border border-zinc-700/50 transition-all">
+                            <i class="fa-solid fa-rotate mr-1"></i> Volver al estado real
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Aprender de Errores -->
+                <div class="bg-dark-400 p-6 rounded-2xl border border-zinc-800/40">
+                    <h3 class="text-sm font-bold text-zinc-100 mb-1 flex items-center">
+                        <i class="fa-solid fa-graduation-cap text-gold-400 mr-2"></i> Aprender de los Errores
+                    </h3>
+                    <p class="text-xs text-zinc-500 mb-3">El sistema compara lo que predijo con lo que realmente ocurrió y corrige el modelo.</p>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                            <p class="text-lg font-black text-white" id="fb-total">0</p>
+                            <p class="text-[9px] text-zinc-500">Resultados reales</p>
+                        </div>
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                            <p class="text-lg font-black text-rose-400" id="fb-errores">0</p>
+                            <p class="text-[9px] text-zinc-500">Errores a corregir</p>
+                        </div>
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                            <p class="text-lg font-black text-amber-400" id="fb-fp">0</p>
+                            <p class="text-[9px] text-zinc-500">Falsos positivos</p>
+                        </div>
+                        <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                            <p class="text-lg font-black text-sky-400" id="fb-fn">0</p>
+                            <p class="text-[9px] text-zinc-500">Falsos negativos</p>
+                        </div>
+                    </div>
+                    <button onclick="reentrenarModelo()" id="btn-retrain" class="w-full bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-300 hover:to-gold-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm flex justify-center items-center shadow-lg shadow-gold-400/10">
+                        <i class="fa-solid fa-arrows-rotate mr-2"></i> Reentrenar Modelo
+                    </button>
+                    <div id="retrain-loading" class="hidden mt-4 text-center">
+                        <div class="w-10 h-10 border-4 border-gold-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <p class="text-xs text-zinc-400">Entrenando con nuevos datos...</p>
+                    </div>
+                    <div id="retrain-resultado" class="hidden mt-4 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-xs text-emerald-300"></div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
@@ -561,6 +675,7 @@
             if (mobileBtn) mobileBtn.className = 'nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20';
             if (name === 'dashboard') cargarDashboard();
             if (name === 'reportes') cargarInformes();
+            if (name === 'modelo') cargarModelo();
         }
 
         function cargarDemo() {
@@ -1036,6 +1151,122 @@
 
         function cerrarDetalle() {
             document.getElementById('detalle-informe').classList.add('hidden');
+        }
+
+        async function cargarModelo() {
+            try {
+                const info = await (await fetch(API_BASE + '/info')).json();
+                document.getElementById('mod-version').textContent = info.version_modelo;
+                document.getElementById('mod-fecha-entrenamiento').textContent = info.fecha_entrenamiento || '-';
+                document.getElementById('mod-fecha-retrain').textContent = info.fecha_ultimo_reentrenamiento ? new Date(info.fecha_ultimo_reentrenamiento).toLocaleString('es-PE') : 'Nunca';
+                document.getElementById('mod-muestras').textContent = info.muestras_actuales + ' / ' + info.muestras_entrenamiento;
+                const badge = document.getElementById('mod-drift-badge');
+                if (info.drift_detectado) {
+                    badge.textContent = 'SÍ';
+                    badge.className = 'font-bold text-rose-400';
+                } else {
+                    badge.textContent = 'NO';
+                    badge.className = 'font-bold text-emerald-400';
+                }
+                const met = info.metricas || {};
+                document.getElementById('mod-acc').textContent = (met.accuracy * 100).toFixed(1) + '%';
+                document.getElementById('mod-prec').textContent = (met.precision * 100).toFixed(1) + '%';
+                document.getElementById('mod-rec').textContent = (met.recall * 100).toFixed(1) + '%';
+                document.getElementById('mod-auc').textContent = met.auc_roc;
+                cargarDrift();
+                cargarFeedback();
+            } catch(e) { console.error('Error cargando modelo:', e); }
+        }
+
+        async function cargarDrift() {
+            try {
+                const d = await (await fetch(API_BASE + '/drift')).json();
+                renderDrift(d);
+            } catch(e) { console.error('Error drift:', e); }
+        }
+
+        async function simularDrift(perfil) {
+            try {
+                const res = await fetch(API_BASE + '/drift/simular', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ n: 200, perfil: perfil })
+                });
+                const d = await res.json();
+                renderDrift(d);
+            } catch(e) { console.error('Error simulando drift:', e); }
+        }
+
+        function renderDrift(d) {
+            const badge = document.getElementById('drift-estado');
+            const estados = {
+                'ESTABLE': ['bg-emerald-500/15 text-emerald-400 border-emerald-500/30', 'Distribución estable — el modelo mantiene su precisión.'],
+                'MODERADO': ['bg-amber-500/15 text-amber-400 border-amber-500/30', 'Se detecta desviación moderada en algunos features.'],
+                'SEVERO': ['bg-rose-500/15 text-rose-400 border-rose-500/30', 'Drift severo detectado: la distribución de datos cambió. Reentrena el modelo.'],
+                'sin_baseline': ['bg-zinc-700/20 text-zinc-400 border-zinc-700/50', 'Sin datos suficientes.'],
+                'sin_datos': ['bg-zinc-700/20 text-zinc-400 border-zinc-700/50', 'Sin predicciones para monitorear.']
+            };
+            const [cls, msg] = estados[d.estado] || ['bg-zinc-700/20 text-zinc-400 border-zinc-700/50', d.mensaje];
+            badge.innerHTML = '<div class="flex items-center justify-between mb-2"><span class="font-bold text-sm ' + (cls.includes('rose') ? 'text-rose-400' : cls.includes('amber') ? 'text-amber-400' : 'text-emerald-400') + '">' + d.estado + '</span><span class="text-[10px] text-zinc-500">' + (d.simulado ? 'SIMULACIÓN · ' + d.segmento + ' · ' + d.nuevos_clientes + ' clientes' : 'En tiempo real') + '</span></div><p class="text-[10px]">' + msg + '</p>';
+
+            const table = document.getElementById('drift-table');
+            const feats = d.features || {};
+            const cols = Object.keys(feats);
+            if (!cols.length) {
+                table.innerHTML = '<div class="text-center text-zinc-500 py-6"><p class="text-xs">Sin datos de features</p></div>';
+                return;
+            }
+            let html = '';
+            const labels = { edad:'Edad', antiguedad_meses:'Antigüedad', precio_membresia:'Precio', asistencia_semanal:'Asistencia', consumo_barra:'Consumo', uso_app:'Uso App', genero_masculino:'Género', membresia_mensual:'Memb. Mensual', membresia_trimestral:'Memb. Trimestral' };
+            for (const f of cols) {
+                const v = feats[f];
+                const color = v.nivel === 'SEVERO' ? 'text-rose-400' : v.nivel === 'MODERADO' ? 'text-amber-400' : v.nivel === 'LEVE' ? 'text-yellow-300' : 'text-emerald-400';
+                html += '<div class="flex items-center justify-between bg-dark-200 border border-zinc-800/30 rounded-lg px-3 py-1.5">' +
+                    '<span class="text-[10px] text-zinc-400">' + (labels[f] || f) + '</span>' +
+                    '<span class="text-[10px] font-bold ' + color + '">' + v.nivel + ' <span class="text-zinc-600 font-normal">(Δ ' + v.score + ')</span></span>' +
+                    '</div>';
+            }
+            table.innerHTML = html;
+        }
+
+        async function cargarFeedback() {
+            try {
+                const f = await (await fetch(API_BASE + '/feedback/estadisticas')).json();
+                document.getElementById('fb-total').textContent = f.total;
+                document.getElementById('fb-errores').textContent = f.errores_modelo;
+                document.getElementById('fb-fp').textContent = f.falsos_positivos;
+                document.getElementById('fb-fn').textContent = f.falsos_negativos;
+            } catch(e) { console.error('Error feedback:', e); }
+        }
+
+        async function reentrenarModelo() {
+            const btn = document.getElementById('btn-retrain');
+            const loading = document.getElementById('retrain-loading');
+            const result = document.getElementById('retrain-resultado');
+            btn.classList.add('hidden');
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+            try {
+                const res = await fetch(API_BASE + '/retrain', { method: 'POST' });
+                const data = await res.json();
+                loading.classList.add('hidden');
+                btn.classList.remove('hidden');
+                if (!res.ok) {
+                    result.className = 'mt-4 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs text-rose-300';
+                    result.textContent = 'Error: ' + (data.detail || 'No se pudo reentrenar');
+                } else {
+                    result.className = 'mt-4 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-xs text-emerald-300';
+                    result.innerHTML = '<div class="flex items-center gap-2 font-bold mb-1"><i class="fa-solid fa-circle-check"></i> Modelo reentrenado (v' + data.version + ')</div>' +
+                        '<p>Muestras: <b>' + data.muestras + '</b> · Fuente: <b>' + (data.fuente === 'feedback' ? 'Resultados reales' : 'Historial') + '</b></p>' +
+                        '<p class="mt-1">Accuracy: <b>' + (data.metricas.accuracy * 100).toFixed(1) + '%</b> · AUC-ROC: <b>' + data.metricas.auc_roc + '</b> · CV: <b>' + (data.cv_accuracy * 100).toFixed(1) + '%</b></p>';
+                }
+                cargarModelo();
+            } catch(e) {
+                loading.classList.add('hidden');
+                btn.classList.remove('hidden');
+                result.className = 'mt-4 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs text-rose-300';
+                result.textContent = 'Error de conexión: ' + e.message;
+            }
         }
 
         window.addEventListener('load', () => {

@@ -12,6 +12,7 @@ Sistema de inteligencia artificial para predicción de deserción de clientes de
 - 📊 **9 variables predictoras** del comportamiento del cliente
 - 🌐 **API REST** con FastAPI y documentación Swagger
 - 📱 **Interfaz web responsiva** para uso en móviles y desktop
+- 🔄 **Aprendizaje continuo**: monitoreo de data drift, registro de resultados reales (feedback) y reentrenamiento del modelo
 - ✅ **Cumple ISO 25010** - Estándar de calidad de software
 
 ---
@@ -108,6 +109,32 @@ curl -X POST "http://localhost:8000/predecir_fuga" \
 }
 ```
 
+### Endpoints de Aprendizaje Continuo
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/drift` | GET | Estado de data drift en tiempo real (comparación contra baseline) |
+| `/drift/simular` | POST | Simula la llegada de un nuevo segmento (what-if, no modifica datos) |
+| `/feedback` | POST | Registra el resultado real de una predicción (`{id_prediccion, socio_se_fugo}`) |
+| `/feedback/lote` | POST | Registra resultados reales en lote |
+| `/feedback/estadisticas` | GET | Resumen de errores del modelo detectados (FP/FN) |
+| `/retrain` | POST | Reentrena el modelo con el feedback acumulado y actualiza las métricas |
+
+```bash
+# Registrar resultado real (el modelo aprende de sus errores)
+curl -X POST "http://localhost:8000/feedback" \
+  -H "Content-Type: application/json" \
+  -d '{"id_prediccion": "PRD-20260807123456", "socio_se_fugo": true}'
+
+# Reentrenar el modelo con el feedback acumulado
+curl -X POST "http://localhost:8000/retrain"
+```
+
+### Generar feedback de demostración
+```bash
+python generar_feedback.py   # simula resultados reales para el historial (600 registros)
+```
+
 ---
 
 ## Estructura del Proyecto
@@ -116,12 +143,17 @@ curl -X POST "http://localhost:8000/predecir_fuga" \
 vortice-ml-api/
 ├── main.py                          # API principal FastAPI
 ├── evaluar_modelo.py                # Script de evaluación ML
+├── generar_feedback.py              # Simulador de resultados reales (aprendizaje continuo)
 ├── modelo_random_forest_vortice.joblib  # Modelo entrenado
 ├── escalador_vortice.joblib         # Escalador StandardScaler
+├── modelo_info.json                 # Metadatos del modelo (versión, drift, reentrenamientos)
+├── feedback.json                    # Resultados reales registrados (aprendizaje continuo)
 ├── requirements.txt                 # Dependencias
 ├── ISO_25010.md                     # Documentación de cumplimiento ISO
 ├── templates/
 │   └── index.html                   # Interfaz web
+├── frontend/
+│   └── index.html                   # Interfaz web standalone (API_BASE configurable)
 ├── reportes/                        # Visualizaciones generadas
 │   ├── curva_roc.png
 │   ├── matriz_confusion.png

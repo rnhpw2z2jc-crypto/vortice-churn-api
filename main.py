@@ -21,6 +21,11 @@ from datetime import datetime
 import os
 import json
 
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -37,6 +42,35 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 MODEL_PATH = "modelo_random_forest_vortice.joblib"
 SCALER_PATH = "escalador_vortice.joblib"
 HISTORY_FILE = "historial_predicciones.json"
+MODEL_INFO_FILE = "modelo_info.json"
+INFORMES_FILE = "informes_semanales.json"
+FEEDBACK_FILE = "feedback.json"
+MODEL_BACKUP_PATH = "modelo_random_forest_vortice_respaldo.joblib"
+SCALER_BACKUP_PATH = "escalador_vortice_respaldo.joblib"
+
+FEATURES = ["edad", "antiguedad_meses", "precio_membresia", "asistencia_semanal", "consumo_barra", "uso_app", "genero_masculino", "membresia_mensual", "membresia_trimestral"]
+
+def cargar_info_modelo():
+    if os.path.exists(MODEL_INFO_FILE):
+        with open(MODEL_INFO_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {
+        "version": "1.0",
+        "fecha_entrenamiento": "2026-01-15",
+        "fecha_ultimo_reentrenamiento": None,
+        "muestras_entrenamiento": 1200,
+        "muestras_actuales": 0,
+        "metricas": {"accuracy": 0.85, "precision": 0.82, "recall": 0.78, "f1_score": 0.80, "auc_roc": 0.88},
+        "baseline": {},
+        "reentrenamientos": [],
+        "drift_detectado": False
+    }
+
+def guardar_info_modelo(info):
+    with open(MODEL_INFO_FILE, "w", encoding="utf-8") as f:
+        json.dump(info, f, ensure_ascii=False, indent=2)
+
+info_modelo = cargar_info_modelo()
 
 try:
     modelo = joblib.load(MODEL_PATH)
@@ -55,6 +89,238 @@ def cargar_historial():
 def guardar_historial(historial):
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(historial, f, ensure_ascii=False, indent=2)
+
+def cargar_feedback():
+    if os.path.exists(FEEDBACK_FILE):
+        with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def guardar_feedback(feedback):
+    with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+        json.dump(feedback, f, ensure_ascii=False, indent=2)
+
+def registrar_feedback(id_prediccion, socio_se_fugo):
+    """Registra el resultado real de una prediccion (el modelo aprende de sus errores)."""
+    historial = cargar_historial()
+    pred = next((p for p in historial if p["id"] == id_prediccion), None)
+    if not pred:
+        raise ValueError(f"No existe la prediccion con id {id_prediccion}")
+    if not pred.get("cliente_demo"):
+        raise ValueError("La prediccion no contiene datos del cliente para entrenar")
+
+    feedback = cargar_feedback()
+    for f in feedback:
+        if f["id_prediccion"] == id_prediccion:
+            f["socio_se_fugo"] = socio_se_fugo
+            f["fecha_feedback"] = datetime.now().isoformat()
+            guardar_feedback(feedback)
+            return {"exito": True, "actualizado": True, "id": id_prediccion, "socio_se_fugo": socio_se_fugo}
+
+    feedback.append({
+        "id_prediccion": id_prediccion,
+        "probabilidad_predicha": pred.get("probabilidad_desercion"),
+        "socio_se_fugo": socio_se_fugo,
+        "fecha_prediccion": pred.get("timestamp"),
+        "fecha_feedback": datetime.now().isoformat(),
+        "cliente_demo": pred["cliente_demo"]
+    })
+    guardar_feedback(feedback)
+    return {"exito": True, "actualizado": False, "id": id_prediccion, "socio_se_fugo": socio_se_fugo}
+
+def registrar_feedback_lote(resultados):
+    """Registra resultados reales para varias predicciones de una sola vez."""
+    registrados = 0
+    for item in resultados:
+        registrar_feedback(item["id_prediccion"], item["socio_se_fugo"])
+        registrados += 1
+    return {"exito": True, "registrados": registrados, "total_feedback": len(cargar_feedback())}
+
+def calcular_baseline(historial):
+    """Calcula estadisticas de referencia (baseline) por feature."""
+    filas = [p for p in historial if p.get("cliente_demo")]
+    if not filas:
+        return {}
+    stats = {}
+    for feat in FEATURES:
+        valores = [p["cliente_demo"].get(feat, 0) for p in filas]
+        arr = np.array(valores, dtype=float)
+        stats[feat] = {"media": round(float(arr.mean()), 4), "std": round(float(arr.std()), 4) if arr.std() > 0 else 0.001}
+    return stats
+
+def monitorear_drift():
+    """Compara la distribucion actual de datos vs el baseline de entrenamiento."""
+    historial = cargar_historial()
+    filas = [p for p in historial if p.get("cliente_demo")]
+    return _calcular_drift(filas, info_modelo.get("baseline"))
+
+def _calcular_drift(filas, baseline):
+    """Nucleo del calculo de drift. Acepta un set de filas y un baseline.
+    Si no hay baseline, se toma la distribucion del historial real como referencia."""
+    if not baseline:
+        historial = cargar_historial()
+        baseline = calcular_baseline([p for p in historial if p.get("cliente_demo")])
+    if not baseline:
+        return {"estado": "sin_baseline", "features": {}, "mensaje": "No hay datos suficientes"}
+
+    if not filas:
+        return {"estado": "sin_datos", "features": {}, "mensaje": "No hay predicciones"}
+
+    features_drift = {}
+    for feat in FEATURES:
+        if feat not in baseline:
+            continue
+        base = baseline[feat]
+        valores = np.array([f["cliente_demo"].get(feat, 0) for f in filas], dtype=float)
+        media_actual = float(valores.mean())
+        score = abs(media_actual - base["media"]) / base["std"]
+        if score < 0.15:
+            nivel = "OK"
+        elif score < 0.35:
+            nivel = "LEVE"
+        elif score < 0.60:
+            nivel = "MODERADO"
+        else:
+            nivel = "SEVERO"
+        features_drift[feat] = {
+            "baseline": base["media"],
+            "actual": round(media_actual, 4),
+            "score": round(score, 3),
+            "nivel": nivel
+        }
+
+    severos = [f for f, v in features_drift.items() if v["nivel"] in ("MODERADO", "SEVERO")]
+    estado = "SEVERO" if any(v["nivel"] == "SEVERO" for v in features_drift.values()) else \
+             "MODERADO" if severos else "ESTABLE"
+    info_modelo["drift_detectado"] = estado != "ESTABLE"
+    return {
+        "estado": estado,
+        "features": features_drift,
+        "total_features": len(features_drift),
+        "en_drift": len(severos),
+        "fecha": datetime.now().isoformat(),
+        "mensaje": "Se detecta desviacion de datos. Reentrena el modelo para mantener precision." if estado != "ESTABLE" else "Distribucion estable, el modelo mantiene su precision."
+    }
+
+def simular_drift(n, perfil):
+    """Simula la llegada de un nuevo segmento de clientes para demostrar el monitoreo
+    de data drift SIN modificar el historial real."""
+    ahora = datetime.now()
+    filas = []
+    for i in range(n):
+        if perfil == "digital":
+            base = {
+                "edad": 24, "antiguedad_meses": 3, "precio_membresia": 120.0,
+                "asistencia_semanal": 1.0, "consumo_barra": 15.0, "uso_app": 1,
+                "genero_masculino": 1, "membresia_mensual": 1, "membresia_trimestral": 0
+            }
+        elif perfil == "premium":
+            base = {
+                "edad": 48, "antiguedad_meses": 36, "precio_membresia": 1050.0,
+                "asistencia_semanal": 1.5, "consumo_barra": 40.0, "uso_app": 0,
+                "genero_masculino": 0, "membresia_mensual": 0, "membresia_trimestral": 0
+            }
+        else:
+            base = {
+                "edad": 55, "antiguedad_meses": 48, "precio_membresia": 290.0,
+                "asistencia_semanal": 0.5, "consumo_barra": 10.0, "uso_app": 0,
+                "genero_masculino": 1, "membresia_mensual": 0, "membresia_trimestral": 0
+            }
+        fila = {"cliente_demo": dict(base)}
+        for k, v in base.items():
+            fila["cliente_demo"][k] = v + np.random.uniform(-0.3, 0.3) * (abs(v) + 1)
+        fila["cliente_demo"]["asistencia_semanal"] = max(0.0, fila["cliente_demo"]["asistencia_semanal"])
+        fila["cliente_demo"]["uso_app"] = float(base["uso_app"])
+        fila["cliente_demo"]["genero_masculino"] = float(base["genero_masculino"])
+        fila["cliente_demo"]["membresia_mensual"] = float(base["membresia_mensual"])
+        fila["cliente_demo"]["membresia_trimestral"] = float(base["membresia_trimestral"])
+        filas.append(fila)
+
+    resultado = _calcular_drift(filas, info_modelo.get("baseline"))
+    resultado["simulado"] = True
+    resultado["segmento"] = perfil
+    resultado["nuevos_clientes"] = n
+    return resultado
+
+def reentrenar_modelo():
+    """Reentrena el modelo con los resultados reales (feedback) acumulados.
+    Prioriza feedback observado; si no hay suficiente, usa las etiquetas del historial."""
+    global modelo, scaler
+    feedback = cargar_feedback()
+    filas_feedback = [f for f in feedback if f.get("cliente_demo")]
+    fuente = "feedback"
+    filas = filas_feedback
+    y_key = "socio_se_fugo"
+    if len(filas) < 50:
+        historial = cargar_historial()
+        filas = [p for p in historial if p.get("cliente_demo")]
+        y_key = "alerta_de_fuga"
+        fuente = "historial"
+        if len(filas) < 50:
+            raise ValueError("No hay suficientes datos para reentrenar (minimo 50).")
+
+    X = np.array([[f["cliente_demo"][feat] for feat in FEATURES] for f in filas], dtype=float)
+    y = np.array([1 if f.get(y_key) else 0 for f in filas], dtype=int)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+    scaler_n = StandardScaler()
+    X_train_s = scaler_n.fit_transform(X_train)
+    X_test_s = scaler_n.transform(X_test)
+
+    rf = RandomForestClassifier(n_estimators=150, max_depth=12, min_samples_split=5, min_samples_leaf=2, random_state=42, n_jobs=-1)
+    rf.fit(X_train_s, y_train)
+
+    y_pred = rf.predict(X_test_s)
+    y_prob = rf.predict_proba(X_test_s)[:, 1]
+    metricas = {
+        "accuracy": round(accuracy_score(y_test, y_pred), 4),
+        "precision": round(precision_score(y_test, y_pred, zero_division=0), 4),
+        "recall": round(recall_score(y_test, y_pred, zero_division=0), 4),
+        "f1_score": round(f1_score(y_test, y_pred, zero_division=0), 4),
+        "auc_roc": round(roc_auc_score(y_test, y_prob), 4)
+    }
+    cv_scores = cross_val_score(rf, X_train_s, y_train, cv=5, scoring="accuracy")
+
+    if not os.path.exists(MODEL_BACKUP_PATH):
+        joblib.dump(modelo, MODEL_BACKUP_PATH)
+        joblib.dump(scaler, SCALER_BACKUP_PATH)
+
+    joblib.dump(rf, MODEL_PATH)
+    joblib.dump(scaler_n, SCALER_PATH)
+
+    modelo = rf
+    scaler = scaler_n
+
+    historial = cargar_historial()
+    version_actual = float(info_modelo.get("version", "1.0"))
+    info_modelo["version"] = str(round(version_actual + 0.1, 1))
+    info_modelo["fecha_ultimo_reentrenamiento"] = datetime.now().isoformat()
+    info_modelo["muestras_actuales"] = len(filas)
+    info_modelo["metricas"] = metricas
+    info_modelo["baseline"] = calcular_baseline(historial)
+    info_modelo["drift_detectado"] = False
+    info_modelo["reentrenamientos"].append({
+        "fecha": datetime.now().isoformat(),
+        "version": info_modelo["version"],
+        "muestras": len(filas),
+        "fuente": fuente,
+        "metricas": metricas,
+        "cv_accuracy": round(float(cv_scores.mean()), 4),
+        "cv_std": round(float(cv_scores.std()), 4),
+        "razon": "Data drift detectado / mejora continua con feedback real"
+    })
+    guardar_info_modelo(info_modelo)
+
+    return {
+        "exito": True,
+        "version": info_modelo["version"],
+        "muestras": len(filas),
+        "fuente": fuente,
+        "metricas": metricas,
+        "cv_accuracy": round(float(cv_scores.mean()), 4),
+        "fecha": info_modelo["fecha_ultimo_reentrenamiento"]
+    }
 
 class DatosCliente(BaseModel):
     edad: float = Field(..., ge=14, le=90, description="Edad del socio")
@@ -113,6 +379,21 @@ class ResultadoROI(BaseModel):
     roi_porcentaje: float
     payback_meses: float
     inversion_sistema: float
+
+class FeedbackRequest(BaseModel):
+    id_prediccion: str = Field(..., description="ID de la prediccion a evaluar")
+    socio_se_fugo: bool = Field(..., description="Resultado real: True si el socio se fugo, False si se quedo")
+
+class FeedbackItem(BaseModel):
+    id_prediccion: str
+    socio_se_fugo: bool
+
+class FeedbackLoteRequest(BaseModel):
+    resultados: List[FeedbackItem]
+
+class SimularDriftRequest(BaseModel):
+    n: int = Field(default=200, ge=10, le=1000, description="Numero de nuevos clientes simulados")
+    perfil: str = Field(default="digital", description="Perfil del nuevo segmento: digital, premium o adulto")
 
 def predecir_cliente(cliente: DatosCliente):
     datos = np.array([[
@@ -217,6 +498,9 @@ async def home():
                         <button onclick="showSection('reportes')" class="nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section="reportes">
                             <i class="fa-solid fa-file-lines mr-1"></i> Reportes
                         </button>
+                        <button onclick="showSection('modelo')" class="nav-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section="modelo">
+                            <i class="fa-solid fa-arrows-rotate mr-1"></i> Modelo
+                        </button>
                     </nav>
                     <button onclick="toggleMobileMenu()" class="btn-hamburger bg-zinc-800 hover:bg-zinc-700 text-zinc-300 p-2 rounded-lg border border-zinc-700/50">
                         <i class="fa-solid fa-bars text-sm"></i>
@@ -244,6 +528,9 @@ async def home():
                 </button>
                 <button onclick="showSection('reportes'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="reportes">
                     <i class="fa-solid fa-file-lines mr-2"></i> Reportes
+                </button>
+                <button onclick="showSection('modelo'); toggleMobileMenu()" class="nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" data-section-mobile="modelo">
+                    <i class="fa-solid fa-arrows-rotate mr-2"></i> Modelo
                 </button>
             </div>
         </header>
@@ -648,6 +935,114 @@ async def home():
                     <div id="detalle-contenido"></div>
                 </div>
             </section>
+
+            <!-- Seccion Aprendizaje Continuo -->
+            <section id="sec-modelo" class="hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-black text-white">Aprendizaje Continuo del Modelo</h2>
+                    <p class="text-xs text-zinc-500 mt-1">Monitoreo de data drift, registro de resultados reales y reentrenamiento automático para mantener la precisión de la IA.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Estado del Modelo -->
+                    <div class="bg-dark-400 p-6 rounded-2xl border border-zinc-800/40">
+                        <h3 class="text-sm font-bold text-zinc-100 mb-4 flex items-center">
+                            <i class="fa-solid fa-microchip text-gold-400 mr-2"></i> Estado del Modelo
+                        </h3>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="text-zinc-500">Versión</span>
+                                <span class="font-bold text-gold-400" id="mod-version">1.0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-zinc-500">Entrenamiento original</span>
+                                <span class="font-bold text-zinc-200" id="mod-fecha-entrenamiento">-</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-zinc-500">Último reentrenamiento</span>
+                                <span class="font-bold text-zinc-200" id="mod-fecha-retrain">Nunca</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-zinc-500">Muestras acumuladas</span>
+                                <span class="font-bold text-zinc-200" id="mod-muestras">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-zinc-500">Drift detectado</span>
+                                <span class="font-bold" id="mod-drift-badge">-</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 rounded-xl bg-dark-200 border border-zinc-800/30">
+                            <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 font-bold">Métricas del modelo</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><p class="text-lg font-black text-gold-400" id="mod-acc">0.85</p><p class="text-[9px] text-zinc-500">Accuracy</p></div>
+                                <div><p class="text-lg font-black text-gold-400" id="mod-prec">0.82</p><p class="text-[9px] text-zinc-500">Precision</p></div>
+                                <div><p class="text-lg font-black text-gold-400" id="mod-rec">0.78</p><p class="text-[9px] text-zinc-500">Recall</p></div>
+                                <div><p class="text-lg font-black text-gold-400" id="mod-auc">0.88</p><p class="text-[9px] text-zinc-500">AUC-ROC</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monitoreo de Data Drift -->
+                    <div class="bg-dark-400 p-6 rounded-2xl border border-zinc-800/40">
+                        <h3 class="text-sm font-bold text-zinc-100 mb-1 flex items-center">
+                            <i class="fa-solid fa-arrow-trend-up text-gold-400 mr-2"></i> Monitoreo de Data Drift
+                        </h3>
+                        <div id="drift-estado" class="text-xs text-zinc-500 mb-3">Analizando distribución de datos...</div>
+                        <div id="drift-table" class="max-h-48 overflow-y-auto scrollbar-hide space-y-1.5">
+                            <div class="text-center text-zinc-500 py-6">
+                                <i class="fa-solid fa-wave-square text-2xl mb-2 opacity-30"></i>
+                                <p class="text-xs">Cargando monitoreo...</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Simular nuevo segmento de clientes</p>
+                            <div class="grid grid-cols-3 gap-2 mb-3">
+                                <button onclick="simularDrift('digital')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] py-2 rounded-lg border border-zinc-700/50 transition-all">Digital</button>
+                                <button onclick="simularDrift('premium')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] py-2 rounded-lg border border-zinc-700/50 transition-all">Premium</button>
+                                <button onclick="simularDrift('adulto')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] py-2 rounded-lg border border-zinc-700/50 transition-all">Adulto</button>
+                            </div>
+                            <p class="text-[9px] text-zinc-600 mb-3">Simulación what-if sin modificar los datos reales del dashboard.</p>
+                            <button onclick="cargarDrift()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs py-2 rounded-lg border border-zinc-700/50 transition-all">
+                                <i class="fa-solid fa-rotate mr-1"></i> Volver al estado real
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Aprender de Errores -->
+                    <div class="bg-dark-400 p-6 rounded-2xl border border-zinc-800/40">
+                        <h3 class="text-sm font-bold text-zinc-100 mb-1 flex items-center">
+                            <i class="fa-solid fa-graduation-cap text-gold-400 mr-2"></i> Aprender de los Errores
+                        </h3>
+                        <p class="text-xs text-zinc-500 mb-3">El sistema compara lo que predijo con lo que realmente ocurrió y corrige el modelo.</p>
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                                <p class="text-lg font-black text-white" id="fb-total">0</p>
+                                <p class="text-[9px] text-zinc-500">Resultados reales</p>
+                            </div>
+                            <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                                <p class="text-lg font-black text-rose-400" id="fb-errores">0</p>
+                                <p class="text-[9px] text-zinc-500">Errores a corregir</p>
+                            </div>
+                            <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                                <p class="text-lg font-black text-amber-400" id="fb-fp">0</p>
+                                <p class="text-[9px] text-zinc-500">Falsos positivos</p>
+                            </div>
+                            <div class="bg-dark-200 p-3 rounded-xl border border-zinc-800/30">
+                                <p class="text-lg font-black text-sky-400" id="fb-fn">0</p>
+                                <p class="text-[9px] text-zinc-500">Falsos negativos</p>
+                            </div>
+                        </div>
+                        <button onclick="reentrenarModelo()" id="btn-retrain" class="w-full bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-300 hover:to-gold-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm flex justify-center items-center shadow-lg shadow-gold-400/10">
+                            <i class="fa-solid fa-arrows-rotate mr-2"></i> Reentrenar Modelo
+                        </button>
+                        <div id="retrain-loading" class="hidden mt-4 text-center">
+                            <div class="w-10 h-10 border-4 border-gold-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <p class="text-xs text-zinc-400">Entrenando con nuevos datos...</p>
+                        </div>
+                        <div id="retrain-resultado" class="hidden mt-4 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-xs text-emerald-300"></div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- Footer -->
@@ -704,6 +1099,7 @@ async def home():
                 if (mobileBtn) mobileBtn.className = 'nav-btn-mobile w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-gold-400 bg-gold-400/10 border border-gold-400/20';
                 if (name === 'dashboard') cargarDashboard();
                 if (name === 'reportes') cargarInformes();
+                if (name === 'modelo') cargarModelo();
             }
 
             function cargarDemo() {
@@ -1183,6 +1579,122 @@ async def home():
                 document.getElementById('detalle-informe').classList.add('hidden');
             }
 
+            async function cargarModelo() {
+                try {
+                    const info = await (await fetch('/info')).json();
+                    document.getElementById('mod-version').textContent = info.version_modelo;
+                    document.getElementById('mod-fecha-entrenamiento').textContent = info.fecha_entrenamiento || '-';
+                    document.getElementById('mod-fecha-retrain').textContent = info.fecha_ultimo_reentrenamiento ? new Date(info.fecha_ultimo_reentrenamiento).toLocaleString('es-PE') : 'Nunca';
+                    document.getElementById('mod-muestras').textContent = info.muestras_actuales + ' / ' + info.muestras_entrenamiento;
+                    const badge = document.getElementById('mod-drift-badge');
+                    if (info.drift_detectado) {
+                        badge.textContent = 'SÍ';
+                        badge.className = 'font-bold text-rose-400';
+                    } else {
+                        badge.textContent = 'NO';
+                        badge.className = 'font-bold text-emerald-400';
+                    }
+                    const met = info.metricas || {};
+                    document.getElementById('mod-acc').textContent = (met.accuracy * 100).toFixed(1) + '%';
+                    document.getElementById('mod-prec').textContent = (met.precision * 100).toFixed(1) + '%';
+                    document.getElementById('mod-rec').textContent = (met.recall * 100).toFixed(1) + '%';
+                    document.getElementById('mod-auc').textContent = met.auc_roc;
+                    cargarDrift();
+                    cargarFeedback();
+                } catch(e) { console.error('Error cargando modelo:', e); }
+            }
+
+            async function cargarDrift() {
+                try {
+                    const d = await (await fetch('/drift')).json();
+                    renderDrift(d);
+                } catch(e) { console.error('Error drift:', e); }
+            }
+
+            async function simularDrift(perfil) {
+                try {
+                    const res = await fetch('/drift/simular', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ n: 200, perfil: perfil })
+                    });
+                    const d = await res.json();
+                    renderDrift(d);
+                } catch(e) { console.error('Error simulando drift:', e); }
+            }
+
+            function renderDrift(d) {
+                const badge = document.getElementById('drift-estado');
+                const estados = {
+                    'ESTABLE': ['bg-emerald-500/15 text-emerald-400 border-emerald-500/30', 'Distribución estable — el modelo mantiene su precisión.'],
+                    'MODERADO': ['bg-amber-500/15 text-amber-400 border-amber-500/30', 'Se detecta desviación moderada en algunos features.'],
+                    'SEVERO': ['bg-rose-500/15 text-rose-400 border-rose-500/30', 'Drift severo detectado: la distribución de datos cambió. Reentrena el modelo.'],
+                    'sin_baseline': ['bg-zinc-700/20 text-zinc-400 border-zinc-700/50', 'Sin datos suficientes.'],
+                    'sin_datos': ['bg-zinc-700/20 text-zinc-400 border-zinc-700/50', 'Sin predicciones para monitorear.']
+                };
+                const [cls, msg] = estados[d.estado] || ['bg-zinc-700/20 text-zinc-400 border-zinc-700/50', d.mensaje];
+                badge.innerHTML = '<div class="flex items-center justify-between mb-2"><span class="font-bold text-sm ' + (cls.includes('rose') ? 'text-rose-400' : cls.includes('amber') ? 'text-amber-400' : 'text-emerald-400') + '">' + d.estado + '</span><span class="text-[10px] text-zinc-500">' + (d.simulado ? 'SIMULACIÓN · ' + d.segmento + ' · ' + d.nuevos_clientes + ' clientes' : 'En tiempo real') + '</span></div><p class="text-[10px]">' + msg + '</p>';
+
+                const table = document.getElementById('drift-table');
+                const feats = d.features || {};
+                const cols = Object.keys(feats);
+                if (!cols.length) {
+                    table.innerHTML = '<div class="text-center text-zinc-500 py-6"><p class="text-xs">Sin datos de features</p></div>';
+                    return;
+                }
+                let html = '';
+                const labels = { edad:'Edad', antiguedad_meses:'Antigüedad', precio_membresia:'Precio', asistencia_semanal:'Asistencia', consumo_barra:'Consumo', uso_app:'Uso App', genero_masculino:'Género', membresia_mensual:'Memb. Mensual', membresia_trimestral:'Memb. Trimestral' };
+                for (const f of cols) {
+                    const v = feats[f];
+                    const color = v.nivel === 'SEVERO' ? 'text-rose-400' : v.nivel === 'MODERADO' ? 'text-amber-400' : v.nivel === 'LEVE' ? 'text-yellow-300' : 'text-emerald-400';
+                    html += '<div class="flex items-center justify-between bg-dark-200 border border-zinc-800/30 rounded-lg px-3 py-1.5">' +
+                        '<span class="text-[10px] text-zinc-400">' + (labels[f] || f) + '</span>' +
+                        '<span class="text-[10px] font-bold ' + color + '">' + v.nivel + ' <span class="text-zinc-600 font-normal">(Δ ' + v.score + ')</span></span>' +
+                        '</div>';
+                }
+                table.innerHTML = html;
+            }
+
+            async function cargarFeedback() {
+                try {
+                    const f = await (await fetch('/feedback/estadisticas')).json();
+                    document.getElementById('fb-total').textContent = f.total;
+                    document.getElementById('fb-errores').textContent = f.errores_modelo;
+                    document.getElementById('fb-fp').textContent = f.falsos_positivos;
+                    document.getElementById('fb-fn').textContent = f.falsos_negativos;
+                } catch(e) { console.error('Error feedback:', e); }
+            }
+
+            async function reentrenarModelo() {
+                const btn = document.getElementById('btn-retrain');
+                const loading = document.getElementById('retrain-loading');
+                const result = document.getElementById('retrain-resultado');
+                btn.classList.add('hidden');
+                loading.classList.remove('hidden');
+                result.classList.add('hidden');
+                try {
+                    const res = await fetch('/retrain', { method: 'POST' });
+                    const data = await res.json();
+                    loading.classList.add('hidden');
+                    btn.classList.remove('hidden');
+                    if (!res.ok) {
+                        result.className = 'mt-4 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs text-rose-300';
+                        result.textContent = 'Error: ' + (data.detail || 'No se pudo reentrenar');
+                    } else {
+                        result.className = 'mt-4 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-xs text-emerald-300';
+                        result.innerHTML = '<div class="flex items-center gap-2 font-bold mb-1"><i class="fa-solid fa-circle-check"></i> Modelo reentrenado (v' + data.version + ')</div>' +
+                            '<p>Muestras: <b>' + data.muestras + '</b> · Fuente: <b>' + (data.fuente === 'feedback' ? 'Resultados reales' : 'Historial') + '</b></p>' +
+                            '<p class="mt-1">Accuracy: <b>' + (data.metricas.accuracy * 100).toFixed(1) + '%</b> · AUC-ROC: <b>' + data.metricas.auc_roc + '</b> · CV: <b>' + (data.cv_accuracy * 100).toFixed(1) + '%</b></p>';
+                    }
+                    cargarModelo();
+                } catch(e) {
+                    loading.classList.add('hidden');
+                    btn.classList.remove('hidden');
+                    result.className = 'mt-4 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs text-rose-300';
+                    result.textContent = 'Error de conexión: ' + e.message;
+                }
+            }
+
             window.addEventListener('load', () => {
                 cargarStatsDesdeAPI();
                 setInterval(() => {
@@ -1442,15 +1954,107 @@ async def health_check():
     return {"status": "healthy", "modelo": True, "version": "3.0.0", "timestamp": datetime.now().isoformat()}
 
 @app.get("/info", tags=["Sistema"])
-async def info_modelo():
+async def info_modelo_endpoint():
     return {
         "modelo": "Random Forest Classifier",
         "features": 9,
         "empresa": "Gimnasio Vórtice S.A.C.",
-        "version": "3.0.0",
-        "endpoints": ["/predecir_fuga", "/predecir_lote", "/historial", "/dashboard/stats", "/health", "/info", "/metricas"]
+        "version_api": "3.0.0",
+        "version_modelo": info_modelo.get("version", "1.0"),
+        "fecha_entrenamiento": info_modelo.get("fecha_entrenamiento"),
+        "fecha_ultimo_reentrenamiento": info_modelo.get("fecha_ultimo_reentrenamiento"),
+        "muestras_entrenamiento": info_modelo.get("muestras_entrenamiento"),
+        "muestras_actuales": info_modelo.get("muestras_actuales"),
+        "metricas": info_modelo.get("metricas", {}),
+        "drift_detectado": info_modelo.get("drift_detectado", False),
+        "endpoints": ["/predecir_fuga", "/predecir_lote", "/historial", "/dashboard/stats", "/health", "/info", "/metricas", "/drift", "/retrain"]
     }
 
 @app.get("/metricas", response_model=MetricasModelo, tags=["Sistema"])
 async def obtener_metricas():
-    return MetricasModelo(accuracy=0.85, precision=0.82, recall=0.78, f1_score=0.80, auc_roc=0.88)
+    m = info_modelo.get("metricas", {})
+    return MetricasModelo(
+        accuracy=m.get("accuracy", 0.85),
+        precision=m.get("precision", 0.82),
+        recall=m.get("recall", 0.78),
+        f1_score=m.get("f1_score", 0.80),
+        auc_roc=m.get("auc_roc", 0.88)
+    )
+
+@app.get("/drift", tags=["Sistema"])
+async def estado_drift():
+    """Monitorea la desviacion de datos (data drift) del modelo en produccion."""
+    return monitorear_drift()
+
+@app.post("/drift/simular", tags=["Sistema"])
+async def simular_drift_demo(req: SimularDriftRequest):
+    """Simula la llegada de un nuevo segmento de clientes y muestra el impacto en el drift."""
+    return simular_drift(req.n, req.perfil)
+
+@app.post("/retrain", tags=["Sistema"])
+async def retrain_modelo():
+    """Reentrena el modelo con los datos acumulados para corregir data drift."""
+    try:
+        return reentrenar_modelo()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error en reentrenamiento: {e}")
+        raise HTTPException(status_code=500, detail=f"Error interno al reentrenar: {e}")
+
+@app.post("/feedback", tags=["Sistema"])
+async def enviar_feedback(fb: FeedbackRequest):
+    """Registra el resultado real de una prediccion para que el modelo aprenda de sus errores."""
+    try:
+        return registrar_feedback(fb.id_prediccion, fb.socio_se_fugo)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error registrando feedback: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/feedback/lote", tags=["Sistema"])
+async def enviar_feedback_lote(fb: FeedbackLoteRequest):
+    """Registra los resultados reales de varias predicciones a la vez."""
+    try:
+        return registrar_feedback_lote([{"id_prediccion": r.id_prediccion, "socio_se_fugo": r.socio_se_fugo} for r in fb.resultados])
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error registrando feedback en lote: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/feedback/estadisticas", tags=["Sistema"])
+async def estadisticas_feedback():
+    """Resumen del feedback acumulado: errores del modelo detectados."""
+    feedback = cargar_feedback()
+    historial = cargar_historial()
+    pred_map = {p["id"]: p for p in historial}
+    if not feedback:
+        return {"total": 0, "errores_modelo": 0, "falsos_positivos": 0, "falsos_negativos": 0, "precision_feedback": None}
+
+    errores = 0
+    fp = 0
+    fn = 0
+    correctos = 0
+    for f in feedback:
+        pred = pred_map.get(f["id_prediccion"])
+        predijo_fuga = bool(pred.get("alerta_de_fuga")) if pred else False
+        real = bool(f["socio_se_fugo"])
+        if predijo_fuga != real:
+            errores += 1
+            if predijo_fuga and not real:
+                fp += 1
+            else:
+                fn += 1
+        else:
+            correctos += 1
+    return {
+        "total": len(feedback),
+        "correctos": correctos,
+        "errores_modelo": errores,
+        "falsos_positivos": fp,
+        "falsos_negativos": fn,
+        "precision_feedback": round(correctos / len(feedback), 4),
+        "mensaje": "El modelo detecto correctamente el resultado en todos los casos." if errores == 0 else f"El modelo fallo en {errores} de {len(feedback)} casos y aprendera de ellos."
+    }

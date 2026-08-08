@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "fecha_entrenamiento": "2026-01-15",
+  "fecha_ultimo_reentrenamiento": null,
+  "muestras_entrenamiento": 1200,
+  "muestras_actuales": 0,
+  "metricas": {
+    "accuracy": 0.85,
+    "precision": 0.82,
+    "recall": 0.78,
+    "f1_score": 0.80,
+    "auc_roc": 0.88
+  },
+  "baseline": {},
+  "reentrenamientos": [],
+  "drift_detectado": false
+}

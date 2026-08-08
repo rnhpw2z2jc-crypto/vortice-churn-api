@@ -1,5 +1,123 @@
 [
   {
+    "id": "INF-20260807-210415",
+    "fecha_generacion": "2026-08-07T21:04:15.882825",
+    "periodo": "07/08/2026 - Informe Automatico",
+    "resumen_ejecutivo": {
+      "total_socios_analizados": 600,
+      "socios_seguros": 376,
+      "socios_en_riesgo": 224,
+      "tasa_desercion": 37.3,
+      "probabilidad_promedio": 0.4246,
+      "clasificacion": {
+        "BAJO": 234,
+        "MEDIO": 142,
+        "ALTO": 117,
+        "CRITICO": 107
+      }
+    },
+    "impacto_financiero": {
+      "ingresos_estimados_mensuales": 38218.38,
+      "ahorro_por_retencion": 676800,
+      "perdida_por_desercion": 403200,
+      "impacto_neto": 273600,
+      "proyeccion_3_meses": 65966.99
+    },
+    "socios_criticos": [
+      {
+        "id": "PRD-20260807197736",
+        "probabilidad": 0.8066,
+        "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+        "timestamp": "2026-08-07T02:23:53.301971"
+      },
+      {
+        "id": "PRD-20260807934328",
+        "probabilidad": 0.772,
+        "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+        "timestamp": "2026-08-06T23:12:53.301971"
+      },
+      {
+        "id": "PRD-20260806153035",
+        "probabilidad": 0.8419,
+        "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+        "timestamp": "2026-08-06T06:44:53.301971"
+      },
+      {
+        "id": "PRD-20260806494956",
+        "probabilidad": 0.8939,
+        "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+        "timestamp": "2026-08-06T02:41:53.301971"
+      },
+      {
+        "id": "PRD-20260805924758",
+        "probabilidad": 0.9011,
+        "recomendacion": "Acción inmediata requerida. Contactar al socio con una oferta personalizada urgente.",
+        "timestamp": "2026-08-05T11:37:53.301971"
+      }
+    ],
+    "socios_en_riesgo_alto": [
+      {
+        "id": "PRD-20260807666157",
+        "probabilidad": 0.6144,
+        "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+        "timestamp": "2026-08-07T02:12:53.301971"
+      },
+      {
+        "id": "PRD-20260806955015",
+        "probabilidad": 0.6793,
+        "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+        "timestamp": "2026-08-06T08:49:53.301971"
+      },
+      {
+        "id": "PRD-20260806615607",
+        "probabilidad": 0.5527,
+        "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+        "timestamp": "2026-08-06T06:37:53.301971"
+      },
+      {
+        "id": "PRD-20260806662336",
+        "probabilidad": 0.6228,
+        "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+        "timestamp": "2026-08-06T06:15:53.301971"
+      },
+      {
+        "id": "PRD-20260806360804",
+        "probabilidad": 0.5017,
+        "recomendacion": "Ofrecer descuento del 15-20% o beneficios adicionales para retener al socio.",
+        "timestamp": "2026-08-06T03:11:53.301971"
+      }
+    ],
+    "recomendaciones_estrategicas": [
+      {
+        "prioridad": "URGENTE",
+        "accion": "Hacer contacto inmediato con los 107 socios criticos. Ofrecer descuento del 20% o servicio premium gratis por 1 mes.",
+        "impacto": "Retencion potencial: S/. 192,600"
+      },
+      {
+        "prioridad": "ALTA",
+        "accion": "Enviar campana de reactivacion a 117 socios en riesgo alto. Incluir clase gratuita con entrenador personal.",
+        "impacto": "Retencion potencial: S/. 210,600"
+      },
+      {
+        "prioridad": "MEDIA",
+        "accion": "Implementar programa de gamificacion y retos mensuales para socios con riesgo medio.",
+        "impacto": "Mejora de engagement estimada: 15-25%"
+      },
+      {
+        "prioridad": "CONTINUA",
+        "accion": "Mantener programa de referidos para socios de bajo riesgo. Ofrecer bonificacion por cada nuevo socio referido.",
+        "impacto": "Potencial de crecimiento: 234 socios como embajadores"
+      }
+    ],
+    "metricas_modelo": {
+      "accuracy": 0.85,
+      "precision": 0.82,
+      "recall": 0.78,
+      "f1_score": 0.8,
+      "auc_roc": 0.88
+    }
+  },
+  {
     "id": "INF-20260807-210213",
     "fecha_generacion": "2026-08-07T21:02:13.497072",
     "periodo": "07/08/2026 - Informe Automatico",

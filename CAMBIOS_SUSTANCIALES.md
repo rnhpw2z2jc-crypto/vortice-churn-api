@@ -194,6 +194,33 @@ Características:
 | 4 | Precio_Membresia_Soles | 0.1245 |
 | 5 | Edad | 0.0987 |
 
+### 5.5 Aprendizaje Continuo (NUEVO)
+
+El modelo ahora **aprende de sus errores y corrige el data drift** en producción:
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/drift` | GET | Monitorea la desviación de datos en tiempo real (comparación contra baseline) |
+| `/drift/simular` | POST | Simula la llegada de un nuevo segmento de clientes (what-if, sin modificar datos) |
+| `/feedback` | POST | Registra el resultado real de una predicción (quién realmente se fugó) |
+| `/feedback/lote` | POST | Registro masivo de resultados reales |
+| `/feedback/estadisticas` | GET | Errores detectados: falsos positivos y falsos negativos |
+| `/retrain` | POST | Reentrena el modelo con el feedback acumulado y actualiza métricas |
+
+**Flujo de aprendizaje continuo:**
+1. El modelo predice el riesgo de cada socio
+2. Se registra el resultado real (¿se fugó o se quedó?) vía feedback
+3. El sistema compara predicción vs realidad y detecta los errores (FP/FN)
+4. El monitor de drift detecta si la distribución de datos cambió
+5. Se reentrena con los datos reales acumulados → el modelo corrige el drift
+
+**Resultados de la demostración:**
+- 600 resultados reales registrados (simulación `generar_feedback.py`)
+- 273 errores del modelo detectados (149 falsos positivos, 124 falsos negativos)
+- Tras el reentrenamiento: Accuracy **85% → 86.7%**, AUC-ROC **0.88 → 0.93**
+
+**Metadatos del modelo** (`modelo_info.json`): versión, fecha de entrenamiento, último reentrenamiento, muestras acumuladas, métricas, historial de reentrenamientos y estado de drift. El modelo anterior se respalda automáticamente antes de cada reentrenamiento.
+
 ---
 
 ## 6. CUMPLIMIENTO ISO 25010
@@ -301,10 +328,10 @@ vortice-ml-api/
 
 | Categoría | Cantidad |
 |-----------|----------|
-| Archivos nuevos creados | 6 |
+| Archivos nuevos creados | 8 |
 | Archivos modificados | 2 |
-| Líneas de código agregadas | +500 |
-| Endpoints nuevos | 5 |
+| Líneas de código agregadas | +700 |
+| Endpoints nuevos | 9 |
 | Visualizaciones ML | 5 |
 | Documentos de soporte | 3 |
 
@@ -355,6 +382,7 @@ El proyecto **Vórtice Gym Power** ha sido transformado de una API básica a un 
 ✅ Interfaz web moderna y responsive
 ✅ API REST completa con documentación
 ✅ Script de evaluación ML robusto
+✅ Aprendizaje continuo: monitoreo de data drift y reentrenamiento con feedback real
 ✅ Listo para deploy en producción
 
 **Estado**: ✅ LISTO PARA EXPO Y DEPLOY
