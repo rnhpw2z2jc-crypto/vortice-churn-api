@@ -203,9 +203,32 @@
                             <button type="submit" class="flex-grow bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-300 hover:to-gold-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm flex justify-center items-center shadow-lg shadow-gold-400/10">
                                 <i class="fa-solid fa-brain mr-2"></i> Predecir Fuga
                             </button>
-                            <button type="button" id="btn-demo" onclick="cargarDemo()" class="bg-zinc-800 hover:bg-zinc-700 active:scale-[0.98] text-zinc-300 transition-all px-4 py-3 rounded-xl font-bold text-sm border border-zinc-700/50" title="Cargar demo">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            </button>
+                            <div class="relative" id="demo-menu-container">
+                                <button type="button" id="btn-demo" onclick="toggleDemoMenu()" class="bg-zinc-800 hover:bg-zinc-700 active:scale-[0.98] text-zinc-300 transition-all px-4 py-3 rounded-xl font-bold text-sm border border-zinc-700/50" title="Seleccionar demo">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                </button>
+                                <div id="demo-menu" class="hidden absolute right-0 bottom-full mb-2 w-60 bg-dark-200 border border-zinc-700/50 rounded-xl shadow-2xl overflow-hidden z-30">
+                                    <p class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold px-3 pt-2.5 pb-1 border-b border-zinc-800/40">Perfil de socio demo</p>
+                                    <button onclick="cargarDemo(0)" class="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-all flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-rose-400 shrink-0"></span> Socio en Riesgo Alto
+                                    </button>
+                                    <button onclick="cargarDemo(1)" class="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-all flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span> Socio Estable y Activo
+                                    </button>
+                                    <button onclick="cargarDemo(2)" class="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-all flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-gold-400 shrink-0"></span> Socio Premium Fiel
+                                    </button>
+                                    <button onclick="cargarDemo(3)" class="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-all flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-sky-400 shrink-0"></span> Nuevo Socio Digital
+                                    </button>
+                                    <button onclick="cargarDemo(4)" class="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-all flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span> Socio Adulto Tradicional
+                                    </button>
+                                    <button onclick="cargarDemo(-1)" class="w-full text-left px-3 py-2 text-xs text-gold-400 hover:bg-zinc-800 transition-all border-t border-zinc-800/40">
+                                        <i class="fa-solid fa-shuffle mr-1"></i> Perfil aleatorio
+                                    </button>
+                                </div>
+                            </div>
                             <button type="button" id="btn-reset" class="bg-zinc-800 hover:bg-zinc-700 active:scale-[0.98] text-zinc-300 transition-all px-4 py-3 rounded-xl font-bold text-sm border border-zinc-700/50" title="Limpiar">
                                 <i class="fa-solid fa-rotate-right"></i>
                             </button>
@@ -705,13 +728,21 @@
             if (name === 'modelo') cargarModelo();
         }
 
-        function cargarDemo() {
+        function toggleDemoMenu() {
+            const menu = document.getElementById('demo-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function cargarDemo(idx) {
             const demos = [
-                { edad: 22, antiguedad_meses: 3, precio_membresia: 120, asistencia_semanal: 1.0, consumo_barra: 10, uso_app: 0, genero_masculino: 1, membresia_mensual: 1, membresia_trimestral: 0 },
-                { edad: 30, antiguedad_meses: 12, precio_membresia: 320, asistencia_semanal: 4.5, consumo_barra: 80, uso_app: 1, genero_masculino: 1, membresia_mensual: 0, membresia_trimestral: 1 },
-                { edad: 45, antiguedad_meses: 36, precio_membresia: 1100, asistencia_semanal: 5.0, consumo_barra: 120, uso_app: 1, genero_masculino: 0, membresia_mensual: 0, membresia_trimestral: 0 }
+                { nombre: 'Socio en Riesgo Alto', edad: 22, antiguedad_meses: 3, precio_membresia: 120, asistencia_semanal: 1.0, consumo_barra: 10, uso_app: 0, genero_masculino: 1, membresia_mensual: 1, membresia_trimestral: 0 },
+                { nombre: 'Socio Estable y Activo', edad: 30, antiguedad_meses: 12, precio_membresia: 320, asistencia_semanal: 4.5, consumo_barra: 80, uso_app: 1, genero_masculino: 1, membresia_mensual: 0, membresia_trimestral: 1 },
+                { nombre: 'Socio Premium Fiel', edad: 45, antiguedad_meses: 36, precio_membresia: 1100, asistencia_semanal: 5.0, consumo_barra: 120, uso_app: 1, genero_masculino: 0, membresia_mensual: 0, membresia_trimestral: 0 },
+                { nombre: 'Nuevo Socio Digital', edad: 19, antiguedad_meses: 1, precio_membresia: 120, asistencia_semanal: 3.0, consumo_barra: 25, uso_app: 1, genero_masculino: 1, membresia_mensual: 1, membresia_trimestral: 0 },
+                { nombre: 'Socio Adulto Tradicional', edad: 58, antiguedad_meses: 48, precio_membresia: 1100, asistencia_semanal: 2.0, consumo_barra: 40, uso_app: 0, genero_masculino: 1, membresia_mensual: 0, membresia_trimestral: 0 }
             ];
-            const d = demos[Math.floor(Math.random() * demos.length)];
+            document.getElementById('demo-menu').classList.add('hidden');
+            const d = demos[idx === undefined || idx === -1 ? Math.floor(Math.random() * demos.length) : idx];
             document.getElementById('edad').value = d.edad;
             document.getElementById('antiguedad').value = d.antiguedad_meses;
             document.getElementById('asistencia').value = d.asistencia_semanal;
@@ -720,6 +751,13 @@
             document.getElementById('uso_app').value = d.uso_app;
             document.getElementById('membresia').value = d.membresia_mensual ? 'mensual' : d.membresia_trimestral ? 'trimestral' : 'anual';
         }
+
+        document.addEventListener('click', (e) => {
+            const cont = document.getElementById('demo-menu-container');
+            if (cont && !cont.contains(e.target)) {
+                document.getElementById('demo-menu').classList.add('hidden');
+            }
+        });
 
         function cargarDemoLote() {
             document.getElementById('lote-input').value = JSON.stringify([
