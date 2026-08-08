@@ -217,7 +217,7 @@ El modelo ahora **aprende de sus errores y corrige el data drift** en producció
 **Resultados de la demostración:**
 - 600 resultados reales registrados (simulación `generar_feedback.py`)
 - 273 errores del modelo detectados (149 falsos positivos, 124 falsos negativos)
-- Tras el reentrenamiento: Accuracy **85% → 86.7%**, AUC-ROC **0.88 → 0.93**
+- Tras el reentrenamiento: Accuracy **85% → 86.7%**, AUC-ROC **0.88 → 0.92**
 
 **Metadatos del modelo** (`modelo_info.json`): versión, fecha de entrenamiento, último reentrenamiento, muestras acumuladas, métricas, historial de reentrenamientos y estado de drift. El modelo anterior se respalda automáticamente antes de cada reentrenamiento.
 

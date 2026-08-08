@@ -268,7 +268,7 @@ def reentrenar_modelo():
     X_train_s = scaler_n.fit_transform(X_train)
     X_test_s = scaler_n.transform(X_test)
 
-    rf = RandomForestClassifier(n_estimators=150, max_depth=12, min_samples_split=5, min_samples_leaf=2, random_state=42, n_jobs=-1)
+    rf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
     rf.fit(X_train_s, y_train)
 
     y_pred = rf.predict(X_test_s)
