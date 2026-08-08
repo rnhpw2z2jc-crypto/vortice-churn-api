@@ -115,6 +115,7 @@ curl -X POST "http://localhost:8000/predecir_fuga" \
 |----------|--------|-------------|
 | `/drift` | GET | Estado de data drift en tiempo real (comparación contra baseline) |
 | `/drift/simular` | POST | Simula la llegada de un nuevo segmento (what-if, no modifica datos) |
+| `/drift/evaluar_lote` | POST | Recalcula el data drift a partir de un lote de clientes (what-if, no modifica historial) |
 | `/feedback` | POST | Registra el resultado real de una predicción (`{id_prediccion, socio_se_fugo}`) |
 | `/feedback/lote` | POST | Registra resultados reales en lote |
 | `/feedback/estadisticas` | GET | Resumen de errores del modelo detectados (FP/FN) |

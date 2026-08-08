@@ -202,6 +202,7 @@ El modelo ahora **aprende de sus errores y corrige el data drift** en producció
 |----------|--------|-------------|
 | `/drift` | GET | Monitorea la desviación de datos en tiempo real (comparación contra baseline) |
 | `/drift/simular` | POST | Simula la llegada de un nuevo segmento de clientes (what-if, sin modificar datos) |
+| `/drift/evaluar_lote` | POST | Recalcula el data drift a partir de un lote procesado (what-if, sin modificar historial) |
 | `/feedback` | POST | Registra el resultado real de una predicción (quién realmente se fugó) |
 | `/feedback/lote` | POST | Registro masivo de resultados reales |
 | `/feedback/estadisticas` | GET | Errores detectados: falsos positivos y falsos negativos |

@@ -886,7 +886,7 @@ async def home():
                     <h3 class="text-sm font-bold text-zinc-100 mb-4 flex items-center">
                         <i class="fa-solid fa-layer-group text-gold-400 mr-2"></i> Predicciones por Lote
                     </h3>
-                    <p class="text-xs text-zinc-500 mb-4">Ingresa múltiples clientes en formato JSON para análisis masivo.</p>
+                    <p class="text-xs text-zinc-500 mb-4">Procesa un lote de socios, recalcula el data drift del nuevo segmento y ofrece limpieza automática del modelo.</p>
                     <textarea id="lote-input" rows="10" class="w-full bg-dark-200 border border-zinc-800/60 rounded-lg p-3 text-xs text-green-400 font-mono focus:outline-none focus:ring-2 focus:ring-gold-400/40 transition-all" placeholder='[
   {"edad": 25, "antiguedad_meses": 6, "precio_membresia": 120.0, "asistencia_semanal": 2.5, "consumo_barra": 30.0, "uso_app": 1, "genero_masculino": 1, "membresia_mensual": 1, "membresia_trimestral": 0},
   {"edad": 35, "antiguedad_meses": 24, "precio_membresia": 320.0, "asistencia_semanal": 4.0, "consumo_barra": 60.0, "uso_app": 1, "genero_masculino": 0, "membresia_mensual": 0, "membresia_trimestral": 1}
@@ -900,6 +900,7 @@ async def home():
                         </button>
                     </div>
                     <div id="lote-resultados" class="mt-4 hidden"></div>
+                    <div id="lote-drift" class="mt-4 hidden"></div>
                 </div>
             </section>
 
@@ -1184,13 +1185,33 @@ async def home():
                 }
             });
 
+            function rnd(min, max, dec) {
+                const v = min + Math.random() * (max - min);
+                return dec === 0 ? Math.round(v) : Math.round(v * 10) / 10;
+            }
+
+            function generarLoteDemo() {
+                const precios = [110.0, 120.0, 290.0, 320.0, 990.0, 1000.0, 1100.0];
+                const clientes = [];
+                for (let i = 0; i < 30; i++) {
+                    const r = Math.random();
+                    let c;
+                    if (r < 0.60) {
+                        c = { edad: rnd(18, 30, 0), antiguedad_meses: rnd(1, 6, 0), precio_membresia: 120.0, asistencia_semanal: rnd(0.5, 2.0, 1), consumo_barra: rnd(0, 30, 1), uso_app: 1, genero_masculino: rnd(0, 1, 0), membresia_mensual: 1, membresia_trimestral: 0 };
+                    } else if (r < 0.80) {
+                        c = { edad: rnd(40, 55, 0), antiguedad_meses: rnd(24, 48, 0), precio_membresia: 1100.0, asistencia_semanal: rnd(3.0, 6.0, 1), consumo_barra: rnd(80, 150, 1), uso_app: Math.random() < 0.5 ? 1 : 0, genero_masculino: rnd(0, 1, 0), membresia_mensual: 0, membresia_trimestral: 0 };
+                    } else {
+                        c = { edad: rnd(30, 60, 0), antiguedad_meses: rnd(12, 48, 0), precio_membresia: precios[Math.floor(Math.random() * precios.length)], asistencia_semanal: rnd(2.0, 5.0, 1), consumo_barra: rnd(30, 100, 1), uso_app: Math.random() < 0.6 ? 1 : 0, genero_masculino: rnd(0, 1, 0), membresia_mensual: Math.random() < 0.6 ? 1 : 0, membresia_trimestral: Math.random() < 0.5 ? 1 : 0 };
+                    }
+                    clientes.push(c);
+                }
+                return clientes;
+            }
+
             function cargarDemoLote() {
-                document.getElementById('lote-input').value = JSON.stringify([
-                    { edad: 22, antiguedad_meses: 3, precio_membresia: 120.0, asistencia_semanal: 1.0, consumo_barra: 10.0, uso_app: 0, genero_masculino: 1, membresia_mensual: 1, membresia_trimestral: 0 },
-                    { edad: 30, antiguedad_meses: 12, precio_membresia: 320.0, asistencia_semanal: 4.5, consumo_barra: 80.0, uso_app: 1, genero_masculino: 1, membresia_mensual: 0, membresia_trimestral: 1 },
-                    { edad: 45, antiguedad_meses: 36, precio_membresia: 1100.0, asistencia_semanal: 5.0, consumo_barra: 120.0, uso_app: 1, genero_masculino: 0, membresia_mensual: 0, membresia_trimestral: 0 },
-                    { edad: 19, antiguedad_meses: 1, precio_membresia: 120.0, asistencia_semanal: 0.5, consumo_barra: 0.0, uso_app: 0, genero_masculino: 1, membresia_mensual: 1, membresia_trimestral: 0 }
-                ], null, 2);
+                document.getElementById('lote-input').value = JSON.stringify(generarLoteDemo(), null, 2);
+                document.getElementById('lote-resultados').classList.add('hidden');
+                document.getElementById('lote-drift').classList.add('hidden');
             }
 
             function getRiskColor(riesgo) {
@@ -1333,8 +1354,15 @@ async def home():
             }
 
             async function procesarLote() {
+                const cont = document.getElementById('lote-resultados');
+                cont.innerHTML = '<div class="text-center text-zinc-400 py-6"><div class="animate-spin inline-block w-6 h-6 border-2 border-gold-400 border-t-transparent rounded-full"></div><p class="text-xs mt-2">Procesando lote de socios...</p></div>';
+                cont.classList.remove('hidden');
+                document.getElementById('lote-drift').classList.add('hidden');
+                let clientes;
                 try {
-                    const clientes = JSON.parse(document.getElementById('lote-input').value);
+                    clientes = JSON.parse(document.getElementById('lote-input').value);
+                } catch (err) { cont.innerHTML = ''; alert('Error en JSON: ' + err.message); return; }
+                try {
                     const res = await fetch('/predecir_lote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientes }) });
                     const data = await res.json();
                     let html = '<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30 mb-3">' +
@@ -1350,9 +1378,74 @@ async def home():
                             '<span class="text-xs text-zinc-400">Cliente ' + (i+1) + '</span>' +
                             '<span class="text-xs font-bold text-' + c + '-400">' + (p.probabilidad_desercion*100).toFixed(1) + '% - ' + p.nivel_riesgo + '</span></div>';
                     });
-                    document.getElementById('lote-resultados').innerHTML = html;
-                    document.getElementById('lote-resultados').classList.remove('hidden');
-                } catch (err) { alert('Error en JSON: ' + err.message); }
+                    cont.innerHTML = html;
+                    recalcularDriftLote(clientes);
+                } catch (err) { cont.innerHTML = ''; alert('Error procesando lote: ' + err.message); }
+            }
+
+            const DRIFT_LABELS = { edad:'Edad', antiguedad_meses:'Antigüedad', precio_membresia:'Precio', asistencia_semanal:'Asistencia', consumo_barra:'Consumo', uso_app:'Uso App', genero_masculino:'Género', membresia_mensual:'Memb. Mensual', membresia_trimestral:'Memb. Trimestral' };
+
+            async function recalcularDriftLote(clientes) {
+                const panel = document.getElementById('lote-drift');
+                panel.classList.remove('hidden');
+                panel.innerHTML = '<div class="text-center text-zinc-400 py-4"><div class="animate-spin inline-block w-6 h-6 border-2 border-gold-400 border-t-transparent rounded-full"></div><p class="text-xs mt-2">Recalculando data drift con el nuevo lote...</p></div>';
+                try {
+                    const res = await fetch('/drift/evaluar_lote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientes }) });
+                    const d = await res.json();
+                    const color = d.estado === 'SEVERO' ? 'rose' : d.estado === 'MODERADO' ? 'amber' : 'emerald';
+                    let featsHtml = '';
+                    const feats = d.features || {};
+                    for (const f of Object.keys(feats)) {
+                        const v = feats[f];
+                        const fcolor = v.nivel === 'SEVERO' ? 'text-rose-400' : v.nivel === 'MODERADO' ? 'text-amber-400' : v.nivel === 'LEVE' ? 'text-yellow-300' : 'text-emerald-400';
+                        featsHtml += '<div class="flex items-center justify-between bg-dark-200 border border-zinc-800/30 rounded-lg px-3 py-1.5">' +
+                            '<span class="text-[10px] text-zinc-400">' + (DRIFT_LABELS[f] || f) + '</span>' +
+                            '<span class="text-[10px] font-bold ' + fcolor + '">' + v.nivel + ' <span class="text-zinc-600 font-normal">(Δ ' + v.score + ')</span></span></div>';
+                    }
+                    let acciones = '';
+                    if (d.requiere_limpieza) {
+                        acciones = '<button onclick="limpiarDataDrift()" id="btn-limpiar-drift" class="mt-3 w-full bg-gradient-to-r from-rose-400 to-rose-600 hover:from-rose-300 hover:to-rose-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm">' +
+                            '<i class="fa-solid fa-broom mr-2"></i> Limpiar Data Drift (Reentrenar Modelo)</button>';
+                    }
+                    panel.innerHTML = '<div class="bg-dark-200 p-4 rounded-xl border border-zinc-800/30">' +
+                        '<div class="flex items-center justify-between mb-3">' +
+                            '<h4 class="text-xs font-bold text-zinc-200"><i class="fa-solid fa-wave-square text-gold-400 mr-1"></i> Recalculo de Data Drift (Lote)</h4>' +
+                            '<span class="text-[10px] font-bold text-' + color + '-400 bg-' + color + '-400/10 px-2 py-0.5 rounded-full border border-' + color + '-400/30">' + d.estado + '</span>' +
+                        '</div>' +
+                        '<div class="grid grid-cols-2 gap-2 text-center mb-3">' +
+                            '<div><p class="text-sm font-bold text-white">' + d.nuevos_clientes + '</p><p class="text-[9px] text-zinc-500">Clientes evaluados</p></div>' +
+                            '<div><p class="text-sm font-bold text-' + color + '-400">' + d.en_drift + ' / ' + d.total_features + '</p><p class="text-[9px] text-zinc-500">Features en drift</p></div>' +
+                        '</div>' +
+                        '<div class="space-y-1.5 max-h-44 overflow-y-auto scrollbar-hide">' + featsHtml + '</div>' +
+                        acciones +
+                    '</div>';
+                } catch (e) {
+                    panel.innerHTML = '<div class="text-xs text-rose-400">Error recalculando drift: ' + e.message + '</div>';
+                }
+            }
+
+            async function limpiarDataDrift() {
+                const btn = document.getElementById('btn-limpiar-drift');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="inline-block animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full mr-2 align-middle"></span> Reentrenando con datos reales...';
+                try {
+                    const res = await fetch('/retrain', { method: 'POST' });
+                    const data = await res.json();
+                    btn.disabled = false;
+                    btn.className = 'mt-3 w-full bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-black active:scale-[0.98] transition-all py-3 rounded-xl font-bold text-sm';
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> Drift Limpiado - Modelo v' + (data.version || '2.0') + ' activo (' + (data.metricas && data.metricas.accuracy ? (data.metricas.accuracy*100).toFixed(1) + '% acc' : '') + ')';
+                    try {
+                        const d = await (await fetch('/drift')).json();
+                        const badge = document.getElementById('mod-drift-badge');
+                        if (badge) {
+                            badge.textContent = d.estado;
+                            badge.className = 'text-[10px] font-bold px-2 py-1 rounded-full ' + (d.estado === 'ESTABLE' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/30' : 'bg-rose-400/10 text-rose-400 border border-rose-400/30');
+                        }
+                    } catch(e) {}
+                } catch (e) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Error: ' + e.message;
+                }
             }
 
             let chartRiesgo, chartTendencia, chartSemana, chartMembresia, chartFeatures;
@@ -2065,6 +2158,20 @@ async def estado_drift():
 async def simular_drift_demo(req: SimularDriftRequest):
     """Simula la llegada de un nuevo segmento de clientes y muestra el impacto en el drift."""
     return simular_drift(req.n, req.perfil)
+
+@app.post("/drift/evaluar_lote", tags=["Sistema"])
+async def drift_evaluar_lote(lote: DatosLote):
+    """Recalcula el data drift a partir de un lote de clientes (what-if, sin modificar el historial real)."""
+    filas = [{"cliente_demo": c.dict()} for c in lote.clientes]
+    prev = info_modelo.get("drift_detectado")
+    try:
+        resultado = _calcular_drift(filas, info_modelo.get("baseline"))
+    finally:
+        info_modelo["drift_detectado"] = prev
+    resultado["simulado"] = True
+    resultado["nuevos_clientes"] = len(filas)
+    resultado["requiere_limpieza"] = resultado.get("estado") not in ("ESTABLE", "sin_baseline", "sin_datos")
+    return resultado
 
 @app.post("/retrain", tags=["Sistema"])
 async def retrain_modelo():
