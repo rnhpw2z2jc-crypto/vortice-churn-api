@@ -60,6 +60,7 @@ def cargar_info_modelo():
         "fecha_ultimo_reentrenamiento": None,
         "muestras_entrenamiento": 1200,
         "muestras_actuales": 0,
+        "accuracy_entrenamiento": 0.986,
         "metricas": {"accuracy": 0.85, "precision": 0.82, "recall": 0.78, "f1_score": 0.80, "auc_roc": 0.88},
         "baseline": {},
         "reentrenamientos": [],
@@ -980,6 +981,33 @@ async def home():
                                 <div><p class="text-lg font-black text-gold-400" id="mod-auc">0.88</p><p class="text-[9px] text-zinc-500">AUC-ROC</p></div>
                             </div>
                         </div>
+                        <div class="mt-3 p-3 rounded-xl bg-dark-200 border border-zinc-800/30">
+                            <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 font-bold">Efectividad: Entrenamiento vs Producción</p>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-[10px] mb-1">
+                                        <span class="text-zinc-400">Entrenamiento (Colab)</span>
+                                        <span class="font-bold text-gold-400" id="mod-acc-train">98.6%</span>
+                                    </div>
+                                    <div class="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                                        <div id="bar-train" class="h-full rounded-full bg-gradient-to-r from-gold-400 to-gold-600 transition-all duration-700" style="width:98.6%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px] mb-1">
+                                        <span class="text-zinc-400">Producción (en vivo)</span>
+                                        <span class="font-bold text-rose-400" id="mod-acc-prod">85.0%</span>
+                                    </div>
+                                    <div class="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                                        <div id="bar-prod" class="h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all duration-700" style="width:85%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 border-t border-zinc-800/40">
+                                    <span class="text-[10px] text-zinc-500">Brecha por data drift</span>
+                                    <span class="text-[10px] font-bold text-amber-400" id="mod-brecha">13.6 pts</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Monitoreo de Data Drift -->
@@ -1599,6 +1627,13 @@ async def home():
                     document.getElementById('mod-prec').textContent = (met.precision * 100).toFixed(1) + '%';
                     document.getElementById('mod-rec').textContent = (met.recall * 100).toFixed(1) + '%';
                     document.getElementById('mod-auc').textContent = met.auc_roc;
+                    const accTrain = (info.accuracy_entrenamiento * 100).toFixed(1);
+                    const accProd = (met.accuracy * 100).toFixed(1);
+                    document.getElementById('mod-acc-train').textContent = accTrain + '%';
+                    document.getElementById('mod-acc-prod').textContent = accProd + '%';
+                    document.getElementById('bar-train').style.width = accTrain + '%';
+                    document.getElementById('bar-prod').style.width = accProd + '%';
+                    document.getElementById('mod-brecha').textContent = (accTrain - accProd).toFixed(1) + ' pts';
                     cargarDrift();
                     cargarFeedback();
                 } catch(e) { console.error('Error cargando modelo:', e); }
@@ -1965,6 +2000,8 @@ async def info_modelo_endpoint():
         "fecha_ultimo_reentrenamiento": info_modelo.get("fecha_ultimo_reentrenamiento"),
         "muestras_entrenamiento": info_modelo.get("muestras_entrenamiento"),
         "muestras_actuales": info_modelo.get("muestras_actuales"),
+        "accuracy_entrenamiento": info_modelo.get("accuracy_entrenamiento", 0.986),
+        "accuracy_produccion": info_modelo.get("metricas", {}).get("accuracy", 0.85),
         "metricas": info_modelo.get("metricas", {}),
         "drift_detectado": info_modelo.get("drift_detectado", False),
         "endpoints": ["/predecir_fuga", "/predecir_lote", "/historial", "/dashboard/stats", "/health", "/info", "/metricas", "/drift", "/retrain"]

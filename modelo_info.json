@@ -4,6 +4,7 @@
   "fecha_ultimo_reentrenamiento": null,
   "muestras_entrenamiento": 1200,
   "muestras_actuales": 0,
+  "accuracy_entrenamiento": 0.986,
   "metricas": {
     "accuracy": 0.85,
     "precision": 0.82,
